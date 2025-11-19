@@ -32,6 +32,10 @@ export const GAME = {
   seasonNumber: 1,
   seasonComplete: false,
 
+  // Seasonal meta trend (e.g., AoE-friendly, defensive)
+  metaTrend: null,
+  metaHistory: [],
+
   // Global day count (for calendar)
   dayNumber: 1,
 

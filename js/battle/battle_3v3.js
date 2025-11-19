@@ -1,5 +1,7 @@
 // js/battle/battle_3v3.js
 //
+import { GAME } from "../core/state.js";
+
 // Advanced 3v3 battle engine using the upgraded fighters.json schema.
 //
 // Features:
@@ -569,6 +571,25 @@ function adjustDamageForResistances(damage, defender, damageType) {
   return result;
 }
 
+function applyMetaTrendBias(score, ability) {
+  const meta = GAME.metaTrend;
+  if (!meta || !meta.bias) return score;
+
+  const bias = meta.bias;
+  let result = score;
+
+  if (bias.aoe && ability.aoe && ability.aoe !== "single") result += bias.aoe;
+  if (bias.support && (isHealingAbility(ability) || hasEffectObject(ability))) result += bias.support;
+  if (bias.heal && isHealingAbility(ability)) result += bias.heal;
+  if (bias.singleTarget && (!ability.aoe || ability.aoe === "single") && isDamagingAbility(ability)) {
+    result += bias.singleTarget;
+  }
+  if (bias.magic && ability.type === "magic") result += bias.magic;
+  if (bias.physical && ability.type === "physical") result += bias.physical;
+
+  return result;
+}
+
 function scoreAbilityForLoadout(fighter, ability, opponents) {
   let score = ability.aiWeight != null ? ability.aiWeight : 1;
 
@@ -583,6 +604,8 @@ function scoreAbilityForLoadout(fighter, ability, opponents) {
     score += vulnCount * 0.25;
     score -= resistCount * 0.2;
   }
+
+  score = applyMetaTrendBias(score, ability);
 
   const pinned = fighter.coreAbilities || [];
   const recommended = fighter.activeAbilities || [];
