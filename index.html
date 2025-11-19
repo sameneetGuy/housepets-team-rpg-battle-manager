@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Babylon League & Babylon Gardens Cup</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    #top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    #day-label {
+      font-weight: bold;
+    }
+
+    button {
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      border: none;
+      background: #3a7bd5;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1.7fr;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    #participants, #league-panel, #cup-panel {
+      background: #222;
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    #participants-list {
+      font-size: 0.9rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 0.25rem 0.35rem;
+      border-bottom: 1px solid #333;
+      text-align: left;
+    }
+
+    th {
+      background: #333;
+    }
+
+    #calendar {
+      background: #222;
+      border-radius: 4px;
+      padding: 0.75rem;
+      max-height: 75vh;
+      overflow-y: auto;
+      border: 1px solid #333;
+    }
+
+    .day-entry {
+      background: #111;
+      border-radius: 4px;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .day-header {
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin-bottom: 0.2rem;
+    }
+
+    .day-meta {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 0.3rem;
+    }
+
+    .match-log {
+      margin-top: 0.3rem;
+      background: #000;
+      border-radius: 4px;
+      padding: 0.4rem;
+      border: 1px solid #333;
+      font-size: 0.8rem;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+	
+	.participants-row {
+	  display: flex;
+	  gap: 16px;
+	  align-items: flex-start;
+	}
+
+	.participants-column {
+	  flex: 1;
+	}
+
+	.supercup-panel {
+	  margin-top: 12px;
+	  padding-top: 8px;
+	  border-top: 1px solid #444;
+	}
+	
+	.calendar-match {
+	  margin-top: 0.25rem;
+	  display: flex;
+	  flex-direction: column;
+	  gap: 0.25rem;
+	}
+  </style>
+</head>
+<body>
+  <h1>Babylon League & Babylon Gardens Cup</h1>
+
+	<div id="participants-panel">
+	  <h2>Participants</h2>
+	  <div class="participants-row">
+		<div class="participants-column">
+		  <h3>Fighters</h3>
+		  <div id="participants-list"></div>
+		</div>
+		<div class="participants-column">
+		  <h3>Teams Titles</h3>
+		  <div id="teams-titles-list"></div>
+		</div>
+	  </div>
+	</div>
+
+  
+    <div id="top-bar">
+    <div id="day-label">Day 1</div>
+    <button id="start-season-btn">Start New Season</button>
+    <button id="next-day-btn" disabled>Next Day</button>
+  </div>
+
+  <div id="layout">
+    <div>
+      <div id="league-panel">
+        <h3>Babylon League (Round Robin)</h3>
+        <div id="league-status"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Pts</th>
+              <th>W</th>
+              <th>D</th>
+              <th>L</th>
+            </tr>
+          </thead>
+          <tbody id="league-table-body"></tbody>
+        </table>
+      </div>
+
+      <div id="cup-panel">
+        <h3>Babylon Gardens Cup (Knockout)</h3>
+        <div id="cup-status"></div>
+      </div>
+    </div>
+
+    <div id="calendar">
+      <h3>Match Calendar</h3>
+      <div id="calendar-entries"></div>
+	  <div id="battle-log" style="
+	  background:#000;
+	  margin-top:1rem;
+	  padding:0.75rem;
+	  border:1px solid #333;
+	  border-radius:4px;
+	  white-space:pre-wrap;
+	  max-height:300px;
+	  overflow-y:auto;
+	  font-size:0.85rem;
+	"></div>
+
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

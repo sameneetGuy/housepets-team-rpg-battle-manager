@@ -1,0 +1,834 @@
+// js/battle/battle_3v3.js
+//
+// Advanced 3v3 battle engine using the upgraded fighters.json schema.
+//
+// Features:
+// - 3v3 format
+// - Position-based targeting (front/mid/back)
+// - AoE support (single, enemy-team, team, all, random-2-enemies)
+// - Buff / debuff stacking hard-capped at ±3 per stat
+// - Cooldowns per ability (ability.cooldown)
+// - Concentration limit: each target can have only one concentration buff
+//   (ability.concentration === true)
+// - Smarter AI using aiWeight + context
+// - Handles special flags: oneTimeDodge, counterNextMiss, redirectChance,
+//   extraEffect, extraDamageIfTargetDebuffed
+// - Minimal logging for performance
+//
+
+// ---------- Utility ----------
+
+function rollInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function rollD20() {
+  return rollInt(1, 20);
+}
+
+/**
+ * Returns true if the debuff/effect should be applied to target.
+ * If the ability has no "save" object, always returns true.
+ * If the save succeeds and onSave === "negate", returns false.
+ */
+function passesSavingThrow(target, ability) {
+  const save = ability.save;
+  if (!save) return true; // no save for this ability
+
+  const stat = save.stat;            // e.g. "luck", "defenseBonus", "speed"
+  const dc = save.dc || 10;
+  const onSave = save.onSave || "negate";
+
+  const statValue = getModifiedStat(target, stat);
+  const roll = rollD20() + statValue;
+
+  // Save succeeds
+  if (roll >= dc) {
+    if (onSave === "negate") {
+      // Entire debuff is resisted
+      return false;
+    }
+    // If in the future you add "half" or "reduced", handle that here.
+    return true;
+  }
+
+  // Save failed: effect applies
+  return true;
+}
+
+function rollDiceExpression(expr) {
+  if (typeof expr !== "string" || !expr.trim()) return 0;
+  const t = expr.trim();
+
+  if (/^[+-]?\d+$/.test(t)) return parseInt(t, 10);
+
+  const m = t.match(/^(\d+)d(\d+)([+\-]\d+)?$/i);
+  if (!m) {
+    const n = parseInt(t, 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  const count = parseInt(m[1], 10);
+  const sides = parseInt(m[2], 10);
+  const mod = m[3] ? parseInt(m[3], 10) : 0;
+
+  let total = 0;
+  for (let i = 0; i < count; i++) total += rollInt(1, sides);
+  return total + mod;
+}
+
+function randomChoice(arr) {
+  if (!arr || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function isAlive(f) {
+  return f.hp > 0;
+}
+
+// ---------- Buff / Debuff & Stats ----------
+
+const BUFF_CAP = 3; // hard cap on total modifier to any stat
+
+function getModifiedStat(fighter, statName) {
+  const base = fighter[statName] || 0;
+
+  // Sum all active effects that modify this stat
+  let bonus = 0;
+  if (fighter.effects) {
+    for (const eff of fighter.effects) {
+      if (eff.stats && typeof eff.stats[statName] === "number") {
+        bonus += eff.stats[statName];
+      }
+    }
+  }
+
+  // Hard cap buffs/debuffs to ±BUFF_CAP relative to base
+  if (bonus > BUFF_CAP) bonus = BUFF_CAP;
+  if (bonus < -BUFF_CAP) bonus = -BUFF_CAP;
+
+  return base + bonus;
+}
+
+function tickEffects(fighters) {
+  for (const f of fighters) {
+    if (!f.effects || f.effects.length === 0) continue;
+    const remain = [];
+    for (const eff of f.effects) {
+      eff.remainingRounds -= 1;
+      if (eff.remainingRounds > 0) remain.push(eff);
+    }
+    f.effects = remain;
+  }
+}
+
+// ---------- Cooldowns ----------
+
+function tickCooldowns(fighters) {
+  for (const f of fighters) {
+    if (!f.cooldowns) continue;
+    for (const id of Object.keys(f.cooldowns)) {
+      f.cooldowns[id] = Math.max(0, f.cooldowns[id] - 1);
+    }
+  }
+}
+
+// ---------- Effects & Special Flags ----------
+
+function hasEffectObject(ability) {
+  return ability && typeof ability.effect === "object" && ability.effect !== null;
+}
+
+// concentration: ability.concentration === true
+// rule: each TARGET can only have ONE concentration buff at a time.
+// New concentration effect replaces previous concentration effect on that target.
+function applyBuffOrDebuff(source, targets, ability) {
+  if (!hasEffectObject(ability)) return;
+
+  const stats = ability.effect;
+  const dur = ability.duration > 0 ? ability.duration : 1;
+  const isConcentration = !!ability.concentration;
+
+  for (const t of targets) {
+    // Saving throw hook: if this ability has a save, check per target
+    if (ability.save && !passesSavingThrow(t, ability)) {
+      continue; // target resisted the effect
+    }
+
+    if (!t.effects) t.effects = [];
+
+    if (isConcentration) {
+      t.effects = t.effects.filter(e => !e.isConcentration);
+    }
+
+    t.effects.push({
+      stats: { ...stats },
+      remainingRounds: dur,
+      source: source.name,
+      abilityName: ability.name,
+      isConcentration
+    });
+  }
+}
+
+function consumeSpecialFlag(f, flagName) {
+  if (!f.effects || f.effects.length === 0) return false;
+  let consumed = false;
+  f.effects = f.effects.filter(e => {
+    if (!e.stats || consumed) return true;
+    if (e.stats[flagName]) {
+      consumed = true;
+      return false;
+    }
+    return true;
+  });
+  return consumed;
+}
+
+function hasCondition(f, condName) {
+  if (!f.effects || f.effects.length === 0) return false;
+  return f.effects.some(e => e.stats && e.stats[condName]);
+}
+
+// ---------- Ability Type Helpers ----------
+
+function isDamagingAbility(a) {
+  return Array.isArray(a.damageByRank);
+}
+
+function isHealingAbility(a) {
+  return Array.isArray(a.healByRank);
+}
+
+// extraEffect patterns:
+// 1) simple: { stat: +1, duration: 2 }
+// 2) split:  { enemy: {...}, ally: {...} }
+function applyExtraEffects(attacker, allies, enemies, target, ability) {
+  const ex = ability.extraEffect;
+  if (!ex) return;
+
+  if (ex.enemy || ex.ally) {
+    // split form
+    if (ex.enemy) {
+      const obj = { ...ex.enemy };
+      const dur = obj.duration || 1;
+      delete obj.duration;
+
+      applyBuffOrDebuff(attacker, [target], {
+        name: ability.name + " (extra enemy)",
+        effect: obj,
+        duration: dur,
+        concentration: false
+      });
+    }
+
+    if (ex.ally) {
+      const obj = { ...ex.ally };
+      const dur = obj.duration || 1;
+      delete obj.duration;
+
+      let allyTarget = null;
+      if (ex.ally.id) {
+        allyTarget = allies.find(a => a.id === ex.ally.id && isAlive(a));
+      }
+      if (!allyTarget) {
+        const aliveAllies = allies.filter(a => isAlive(a) && a.id !== attacker.id);
+        allyTarget = randomChoice(aliveAllies);
+      }
+      if (allyTarget) {
+        applyBuffOrDebuff(attacker, [allyTarget], {
+          name: ability.name + " (extra ally)",
+          effect: obj,
+          duration: dur,
+          concentration: false
+        });
+      }
+    }
+    return;
+  }
+
+  // simple form
+  const obj = { ...ex };
+  const dur = obj.duration || 1;
+  delete obj.duration;
+
+  applyBuffOrDebuff(attacker, [target], {
+    name: ability.name + " (extra)",
+    effect: obj,
+    duration: dur,
+    concentration: false
+  });
+}
+
+// ---------- Damage / Heal ----------
+
+function attemptHit(attacker, defender, ability) {
+  const statName = ability.hitStat || "attackBonus";
+  const hitVal = getModifiedStat(attacker, statName);
+  const defVal = getModifiedStat(defender, "defenseBonus");
+
+  // --- Advantage / Disadvantage flags ---
+  const hasAdvantage = consumeSpecialFlag(attacker, "attackAdvantage");
+  const hasDisadvantage = consumeSpecialFlag(attacker, "attackDisadvantage");
+
+  let roll;
+  if (hasAdvantage && !hasDisadvantage) {
+    const r1 = rollD20();
+    const r2 = rollD20();
+    roll = Math.max(r1, r2);
+  } else if (hasDisadvantage && !hasAdvantage) {
+    const r1 = rollD20();
+    const r2 = rollD20();
+    roll = Math.min(r1, r2);
+  } else {
+    roll = rollD20();
+  }
+
+  const total = roll + hitVal;
+  const target = 10 + defVal;
+
+  return { hit: total >= target, roll, total, target };
+}
+
+function computeDamage(attacker, defender, ability) {
+  const arr = ability.damageByRank;
+  const idx = Math.min((ability.rank || 1) - 1, arr.length - 1);
+  let dmg = rollDiceExpression(arr[idx]);
+
+  // ---- Luck-based critical hits ----
+  const luck = getModifiedStat(attacker, "luck");
+
+  // Base 5% crit +1% per Luck point
+  let critChance = 0.05 + luck * 0.01;
+
+  // Clamp between 0% and 25%
+  critChance = Math.min(0.25, Math.max(0, critChance));
+
+  let isCrit = false;
+  if (Math.random() < critChance) {
+    isCrit = true;
+    dmg = Math.round(dmg * 1.5); // 50% more damage on crit
+  }
+
+  if (ability.extraDamageIfTargetDebuffed && defender.effects && defender.effects.length > 0) {
+    dmg += ability.extraDamageIfTargetDebuffed;
+  }
+
+  if (dmg < 1) dmg = 1;
+
+  // Return both damage and crit info
+  return { dmg, isCrit };
+}
+
+function computeHealAmount(ability) {
+  const arr = ability.healByRank;
+  const idx = Math.min((ability.rank || 1) - 1, arr.length - 1);
+  let heal = rollDiceExpression(arr[idx]);
+  if (heal < 1) heal = 1;
+  return heal;
+}
+
+// ---------- Targeting & AoE ----------
+
+function getAliveByPosition(fighters, pos) {
+  return fighters.filter(f => isAlive(f) && f.position === pos);
+}
+
+function selectSingleEnemy(attacker, enemies, targeting) {
+  const aliveEnemies = enemies.filter(isAlive);
+  if (aliveEnemies.length === 0) return null;
+
+  if (targeting === "front-preferred") {
+    const fronts = getAliveByPosition(enemies, "front");
+    if (fronts.length > 0) return randomChoice(fronts);
+    const mids = getAliveByPosition(enemies, "mid");
+    if (mids.length > 0) return randomChoice(mids);
+    const backs = getAliveByPosition(enemies, "back");
+    if (backs.length > 0) return randomChoice(backs);
+    return randomChoice(aliveEnemies);
+  }
+
+  // default: any-enemy
+  return randomChoice(aliveEnemies);
+}
+
+function selectSingleAlly(attacker, allies, ability, targeting) {
+  const aliveAllies = allies.filter(isAlive);
+
+  // healing: pick lowest HP%
+  if (isHealingAbility(ability)) {
+    let best = null;
+    let bestRatio = 1.1;
+    for (const a of aliveAllies) {
+      const ratio = a.hp / a.maxHP;
+      if (ratio < bestRatio) {
+        bestRatio = ratio;
+        best = a;
+      }
+    }
+    return best || attacker;
+  }
+
+  // buff-like: if we have heals/buffs, try prefer not-full HP
+  if (hasEffectObject(ability)) {
+    const notFull = aliveAllies.filter(a => a.hp < a.maxHP);
+    if (notFull.length > 0) return randomChoice(notFull);
+  }
+
+  if (targeting === "self") return attacker;
+  return randomChoice(aliveAllies);
+}
+
+function selectTargets(attacker, allies, enemies, ability) {
+  const aoe = ability.aoe || "single";
+  const targeting = ability.targeting || "any-enemy";
+
+  // Self-target abilities
+  if (targeting === "self") {
+    if (aoe === "single") return { allies, enemies, targets: [attacker] };
+    if (aoe === "team") return { allies, enemies, targets: allies.filter(isAlive) };
+  }
+
+  // Ally-targeting (buff/heal)
+  if (targeting === "ally" || targeting === "team") {
+    if (aoe === "team") {
+      return { allies, enemies, targets: allies.filter(isAlive) };
+    }
+    const t = selectSingleAlly(attacker, allies, ability, targeting);
+    return { allies, enemies, targets: t ? [t] : [] };
+  }
+
+  // Enemy-targeting
+  const aliveEnemies = enemies.filter(isAlive);
+  if (aliveEnemies.length === 0) return { allies, enemies, targets: [] };
+
+  if (aoe === "enemy-team") {
+    return { allies, enemies, targets: aliveEnemies };
+  }
+
+  if (aoe === "all") {
+    return { allies, enemies, targets: [...allies.filter(isAlive), ...aliveEnemies] };
+  }
+
+  if (aoe === "random-2-enemies") {
+    const copy = [...aliveEnemies];
+    const chosen = [];
+    while (copy.length > 0 && chosen.length < 2) {
+      const idx = Math.floor(Math.random() * copy.length);
+      chosen.push(copy.splice(idx, 1)[0]);
+    }
+    return { allies, enemies, targets: chosen };
+  }
+
+  // default: single enemy
+  const enemy = selectSingleEnemy(attacker, enemies, targeting);
+  return { allies, enemies, targets: enemy ? [enemy] : [] };
+}
+
+// ---------- Redirect (Body Block, Guard Duty, etc.) ----------
+
+function maybeRedirectTarget(target, allies) {
+  const candidates = allies.filter(a => isAlive(a) && a.effects && a.effects.length > 0);
+  let best = null;
+  let bestChance = 0;
+
+  for (const a of candidates) {
+    for (const eff of a.effects) {
+      if (!eff.stats) continue;
+      const ch = eff.stats.redirectChance;
+      if (typeof ch === "number" && ch > bestChance) {
+        bestChance = ch;
+        best = a;
+      }
+    }
+  }
+
+  if (!best || bestChance <= 0) return target;
+
+  if (Math.random() < bestChance) {
+    return best;
+  }
+  return target;
+}
+
+// ---------- AI ----------
+
+function targetingIsSelf(ability) {
+  return ability.targeting === "self";
+}
+
+function scoreAbility(attacker, allies, enemies, ability, round) {
+  const base = ability.aiWeight || 1.0;
+  let score = base;
+
+  const aoe = ability.aoe || "single";
+  const isDamage = isDamagingAbility(ability);
+  const isHeal = isHealingAbility(ability);
+  const hasBuff = hasEffectObject(ability);
+
+  const aliveAllies = allies.filter(isAlive);
+  const aliveEnemies = enemies.filter(isAlive);
+
+  const lowestAllyRatio = aliveAllies.reduce(
+    (min, a) => Math.min(min, a.hp / a.maxHP),
+    1.0
+  );
+  const lowestEnemyRatio = aliveEnemies.reduce(
+    (min, e) => Math.min(min, e.hp / e.maxHP),
+    1.0
+  );
+
+  // Healing
+  if (isHeal) {
+    if (lowestAllyRatio < 0.4) score *= 1.8;
+    else if (lowestAllyRatio < 0.7) score *= 1.3;
+    else score *= 0.4;
+  }
+
+  // Team buffs early
+  if (!isDamage && hasBuff && aoe === "team") {
+    if (round <= 3) score *= 1.5;
+    else score *= 1.0;
+  }
+
+  // Self-buffs for frontliners
+  if (!isDamage && targetingIsSelf(ability)) {
+    if (attacker.roleClass === "frontliner" || attacker.roleClass === "bruiser") {
+      score *= 1.2;
+    }
+  }
+
+  // Heavy finishers when enemies are low
+  if (isDamage && ability.category === "heavy") {
+    if (lowestEnemyRatio < 0.4) score *= 1.6;
+    else score *= 1.1;
+  }
+
+  // AoE is good with multiple enemies
+  if (isDamage && (aoe === "enemy-team" || aoe === "random-2-enemies")) {
+    if (aliveEnemies.length >= 2) score *= 1.4;
+  }
+
+  // If attacker is low HP and ability is pure damage, slightly deprioritize
+  const myRatio = attacker.hp / attacker.maxHP;
+  if (myRatio < 0.3 && isDamage && !isHeal && !hasBuff) {
+    score *= 0.8;
+  }
+
+  // Cooldown heuristic: if ability has a long cooldown, the AI slightly
+  // values it more when used (so it "feels" impactful in scoring)
+  if (ability.cooldown && ability.cooldown >= 3) {
+    score *= 1.1;
+  }
+
+  // Tiny randomness
+  score *= 0.9 + Math.random() * 0.2;
+
+  return score;
+}
+
+function chooseAbility(attacker, allies, enemies, round) {
+  const usable = attacker.abilities || [];
+  if (usable.length === 0) return null;
+
+  const cdMap = attacker.cooldowns || {};
+  const silenced = hasCondition(attacker, "silenced");
+
+  let totalScore = 0;
+  const scored = [];
+
+  for (const ab of usable) {
+    const cd = ab.cooldown || 0;
+    if (cdMap[ab.id] && cdMap[ab.id] > 0) {
+      continue; // still on cooldown
+    }
+
+    // Silenced: skip magic abilities entirely
+    if (silenced && ab.type === "magic") {
+      continue;
+    }
+
+    const isDamage = isDamagingAbility(ab);
+    const isHeal = isHealingAbility(ab);
+    const hasBuff = hasEffectObject(ab);
+
+    if (!isDamage && !isHeal && !hasBuff) {
+      if (!ab.aiWeight) ab.aiWeight = 0.7;
+    }
+
+    const s = scoreAbility(attacker, allies, enemies, ab, round);
+    if (s <= 0) continue;
+    scored.push({ ab, score: s });
+    totalScore += s;
+  }
+
+  if (scored.length === 0) return null;
+
+  let r = Math.random() * totalScore;
+  for (const item of scored) {
+    if (r < item.score) return item.ab;
+    r -= item.score;
+  }
+
+  return scored[scored.length - 1].ab;
+}
+
+// ---------- Action Execution ----------
+
+function performAction(attacker, allies, enemies, round, logLines) {
+  if (!isAlive(attacker)) return;
+  
+  // Stunned: skip this action entirely
+  if (hasCondition(attacker, "stunned")) {
+    logLines.push(`${attacker.name} is stunned and can't act this round.`);
+    return;
+  }
+
+  const ability = chooseAbility(attacker, allies, enemies, round);
+  if (!ability) {
+    logLines.push(`${attacker.name} hesitates.`);
+    return;
+  }
+
+  // Start cooldown as soon as ability is chosen (like spending a spell slot)
+  if (!attacker.cooldowns) attacker.cooldowns = {};
+  if (ability.cooldown && ability.cooldown > 0) {
+    attacker.cooldowns[ability.id] = ability.cooldown;
+  }
+
+  const { targets } = selectTargets(attacker, allies, enemies, ability);
+  if (!targets || targets.length === 0) {
+    logLines.push(`${attacker.name} uses ${ability.name}, but finds no valid target.`);
+    return;
+  }
+
+  const isDamage = isDamagingAbility(ability);
+  const isHeal = isHealingAbility(ability);
+  const hasBuff = hasEffectObject(ability);
+
+  if (isDamage) {
+    const allEnemySide = enemies;
+    for (let target of targets) {
+      if (!isAlive(target)) continue;
+
+      // redirect (body block / guard duty)
+      const enemyAllies = allEnemySide;
+      target = maybeRedirectTarget(target, enemyAllies);
+
+      if (consumeSpecialFlag(target, "oneTimeDodge")) {
+        logLines.push(`${attacker.name} uses ${ability.name} on ${target.name}, but they dodge!`);
+        continue;
+      }
+
+      const hit = attemptHit(attacker, target, ability);
+      if (!hit.hit) {
+        logLines.push(
+          `${attacker.name} uses ${ability.name} on ${target.name}, but misses.`
+        );
+
+        if (
+          consumeSpecialFlag(target, "counterNextMiss") &&
+          isAlive(target) &&
+          isAlive(attacker)
+        ) {
+          const counterDmg = rollDiceExpression("1d4+1");
+          const oldHP = attacker.hp;
+          attacker.hp = Math.max(0, attacker.hp - counterDmg);
+          logLines.push(
+            `${target.name} counters for ${counterDmg} damage (${oldHP} → ${attacker.hp}).`
+          );
+          if (!isAlive(attacker)) {
+            logLines.push(`${attacker.name} is knocked out!`);
+            break;
+          }
+        }
+        continue;
+      }
+
+      const { dmg, isCrit } = computeDamage(attacker, target, ability);
+	  const oldHP = target.hp;
+	  target.hp = Math.max(0, target.hp - dmg);
+
+	  const critText = isCrit ? " (CRIT!)" : "";
+	  logLines.push(
+	    `${attacker.name} hits ${target.name} with ${ability.name}${critText} for ${dmg} (${oldHP} → ${target.hp}).`
+	  );
+
+      // If this damaging ability also has an effect (e.g. Hex), apply it (with save inside).
+      if (hasBuff) applyBuffOrDebuff(attacker, [target], ability);
+
+      if (ability.extraEffect) applyExtraEffects(attacker, allies, enemies, target, ability);
+
+      if (!isAlive(target)) {
+        logLines.push(`${target.name} is knocked out!`);
+      }
+    }
+    return;
+  }
+
+  if (isHeal) {
+    for (const t of targets) {
+      if (!isAlive(t)) continue;
+
+      const amount = computeHealAmount(ability);
+      const oldHP = t.hp;
+      t.hp = Math.min(t.maxHP, t.hp + amount);
+      const healed = t.hp - oldHP;
+
+      if (healed > 0) {
+        logLines.push(
+          `${attacker.name} uses ${ability.name} on ${t.name}, healing ${healed} (${oldHP} → ${t.hp}).`
+        );
+      }
+
+      if (hasBuff) applyBuffOrDebuff(attacker, [t], ability);
+    }
+    return;
+  }
+
+  // Pure buff / utility (includes debuffs like Dark Mist, Taunting Bark, etc.)
+  if (hasBuff) {
+    applyBuffOrDebuff(attacker, targets, ability);
+    const names = targets.map(t => t.name).join(", ");
+    logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
+    return;
+  }
+
+  logLines.push(`${attacker.name} uses ${ability.name}, but nothing obvious happens.`);
+}
+
+// ---------- Turn Order ----------
+
+function buildTurnOrder(allFighters) {
+  const arr = allFighters
+    .filter(isAlive)
+    .map(f => {
+      const rawSpeed = getModifiedStat(f, "speed");
+      const safeSpeed = Math.max(0, rawSpeed);
+	  const jitter = Math.random() * 0.75; // instead of 0–1
+      return {
+        f,
+        speedVal: Math.sqrt(safeSpeed) + jitter
+      };
+    });
+
+  arr.sort((a, b) => b.speedVal - a.speedVal);
+  return arr.map(x => x.f);
+}
+
+
+// ---------- Clone Fighter for Battle ----------
+
+function cloneFighterForBattle(f) {
+  const c = { ...f };
+  c.hp = c.maxHP;
+  c.effects = [];
+  c.cooldowns = {}; // abilityId -> remaining cooldown
+  return c;
+}
+
+// ---------- Main Simulation ----------
+
+// Run a single battle on existing fighter objects (no cloning here).
+// aF and bF are mutated in-place: hp, effects, cooldowns, flags, etc.
+function runBattleOnExistingFighters(aF, bF) {
+  const log = [];
+
+  log.push(
+    `Battle Start: [A] ${aF.map(f => f.name).join(", ")} vs [B] ${bF
+      .map(f => f.name)
+      .join(", ")}`
+  );
+
+  let round = 1;
+  const maxRounds = 60;
+
+  while (round <= maxRounds) {
+    const aliveA = aF.filter(isAlive);
+    const aliveB = bF.filter(isAlive);
+
+    if (aliveA.length === 0 || aliveB.length === 0) break;
+
+    log.push(`-- Round ${round} --`);
+
+    tickEffects([...aF, ...bF]);
+    tickCooldowns([...aF, ...bF]);
+
+    const turnOrder = buildTurnOrder([...aF, ...bF]);
+
+    for (const fighter of turnOrder) {
+      if (!isAlive(fighter)) continue;
+
+      const allies = aF.includes(fighter) ? aF : bF;
+      const enemies = allies === aF ? bF : aF;
+
+      if (enemies.filter(isAlive).length === 0) break;
+
+      performAction(fighter, allies, enemies, round, log);
+
+      if (aF.filter(isAlive).length === 0 || bF.filter(isAlive).length === 0) break;
+    }
+
+    round++;
+  }
+
+  const aliveA2 = aF.filter(isAlive).length;
+  const aliveB2 = bF.filter(isAlive).length;
+
+  let winner = "A";
+  if (aliveA2 && !aliveB2) {
+    winner = "A";
+  } else if (aliveB2 && !aliveA2) {
+    winner = "B";
+  } else {
+    const hpA = aF.reduce((s, f) => s + Math.max(0, f.hp), 0);
+    const hpB = bF.reduce((s, f) => s + Math.max(0, f.hp), 0);
+    if (hpA > hpB) winner = "A";
+    else if (hpB > hpA) winner = "B";
+    else winner = Math.random() < 0.5 ? "A" : "B";
+  }
+
+  log.push(`Battle Result: Team ${winner} wins.`);
+
+  return { winner, log: log.join("\n") };
+}
+
+// Single-battle entrypoint (used for places that still want BO1, like Super Cup)
+export function simulateTeamBattle(teamA, teamB) {
+  const aF = teamA.map(cloneFighterForBattle);
+  const bF = teamB.map(cloneFighterForBattle);
+  return runBattleOnExistingFighters(aF, bF);
+}
+
+// Multi-game series: HP resets between games, but effects/cooldowns/flags persist.
+export function simulateTeamSeries(teamA, teamB, games = 2) {
+  const aF = teamA.map(cloneFighterForBattle);
+  const bF = teamB.map(cloneFighterForBattle);
+
+  let winsA = 0;
+  let winsB = 0;
+  const seriesLogs = [];
+
+  for (let g = 1; g <= games; g++) {
+    // Reset HP only; keep effects, cooldowns, and other state.
+    for (const f of aF) f.hp = f.maxHP;
+    for (const f of bF) f.hp = f.maxHP;
+
+    const { winner, log } = runBattleOnExistingFighters(aF, bF);
+
+    seriesLogs.push(`Game ${g}\n${log}`);
+
+    if (winner === "A") winsA++;
+    else if (winner === "B") winsB++;
+  }
+
+  let seriesWinner = "DRAW";
+  if (winsA > winsB) seriesWinner = "A";
+  else if (winsB > winsA) seriesWinner = "B";
+
+  return {
+    winner: seriesWinner, // "A", "B", or "DRAW" (for even number of games)
+    log: seriesLogs.join("\n\n")
+  };
+}
+
