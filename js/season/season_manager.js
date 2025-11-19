@@ -257,10 +257,12 @@ function simulateCupRound() {
     // Final just played
     GAME.cup.finished = true;
 
-    const cupWinnerIdx = winners[0]; // Only one match in the final
-	GAME.cup.winnerTeamIndex = cupWinnerIdx
+    const cupWinnerIdx = winners.find((idx) => idx != null) ?? null;
+    GAME.cup.winnerTeamIndex = cupWinnerIdx;
+    GAME.cup.matches = [];
 
-    const cupWinnerTeam = GAME.teams[cupWinnerIdx];
+    const cupWinnerTeam =
+      cupWinnerIdx != null ? GAME.teams[cupWinnerIdx] : undefined;
     if (cupWinnerTeam) {
       // Team Cup titles
       cupWinnerTeam.cupTitles = (cupWinnerTeam.cupTitles || 0) + 1;
@@ -274,7 +276,7 @@ function simulateCupRound() {
       }
     }
 
-    // Prepare Super Cup: league champion vs cup winner
+    // Prepare Super Cup: league champion vs cup winner (if available)
     const leagueChampIdx = getLeagueChampionIndex();
     let superCupOpponentIdx = cupWinnerIdx;
 
@@ -283,11 +285,15 @@ function simulateCupRound() {
       superCupOpponentIdx = getLeagueRunnerUpIndex();
     }
 
-    GAME.supercup = {
-      aIdx: leagueChampIdx,
-      bIdx: superCupOpponentIdx,
-      played: false
-    };
+    if (leagueChampIdx != null && superCupOpponentIdx != null) {
+      GAME.supercup = {
+        aIdx: leagueChampIdx,
+        bIdx: superCupOpponentIdx,
+        played: false
+      };
+    } else {
+      GAME.supercup = null;
+    }
   } else {
     // Build next round matches from winners, allowing byes if needed
     const nextPairs = [];
