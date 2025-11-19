@@ -7,8 +7,29 @@ import { renderAll } from "./ui/render.js";
 import { setupUIEvents } from "./ui/ui_events.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadFighters();
+  const statusEl = document.getElementById("app-status");
+  const startBtn = document.getElementById("start-season-btn");
+  const nextBtn = document.getElementById("next-day-btn");
+
+  if (startBtn) startBtn.disabled = true;
+  if (nextBtn) nextBtn.disabled = true;
+  if (statusEl) statusEl.textContent = "Loading fighters…";
+
+  try {
+    await loadFighters();
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      statusEl.textContent =
+        "Failed to load fighter data. Check your connection and refresh the page.";
+    }
+    return;
+  }
+
   ensureInitialTeams();
   renderAll(); // initial render (no season yet)
-  setupUIEvents({ startNewSeason, advanceDay, renderAll });
+  setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl });
+
+  if (startBtn) startBtn.disabled = false;
+  if (statusEl) statusEl.textContent = "";
 });
