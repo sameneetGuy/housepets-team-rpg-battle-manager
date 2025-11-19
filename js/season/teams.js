@@ -8,42 +8,42 @@ const BASE_TEAMS = [
   {
     id: "babylon_knights",
     name: "Babylon Knights",
-    fighterIds: ["bailey", "king", "peanut"], // Tank + Bruiser + Support
+    fighterIds: ["bailey", "peanut", "fox"],
   },
   {
     id: "k9pd",
     name: "K9PD",
-    fighterIds: ["fido", "ralph", "fox"], // Bruiser + Tank + DPS
+    fighterIds: ["ralph", "sasha", "terrace"],
   },
   {
     id: "keene_enterprises",
     name: "Keene Enterprises",
-    fighterIds: ["keene", "lana", "terrace"], // Trickster + Trickster + Bruiser
+    fighterIds: ["kevin", "tarot", "terrace"],
   },
   {
     id: "milton_estate",
     name: "Milton Estate",
-    fighterIds: ["lucretia", "breel", "marvin"], // Tank + Support/Mage + Support
+    fighterIds: ["king", "breel", "lana"],
   },
   {
     id: "odd_company",
     name: "Odd Company",
-    fighterIds: ["karishad", "kevin", "natalie"], // Trickster + Bruiser + Mage
+    fighterIds: ["mungo", "marvin", "maxwell"],
   },
   {
     id: "pridelands_warriors",
     name: "Pridelands Warriors",
-    fighterIds: ["tiger", "grape", "sasha"], // Berserker + Agile DPS + Support
+    fighterIds: ["tiger", "grape", "natalie"],
   },
   {
     id: "team_sibling_rivalry",
     name: "Team Sibling Rivalry",
-    fighterIds: ["maxwell", "joey", "sabrina"], // Trickster + Mage + Mage
+    fighterIds: ["fido", "joey", "bino"],
   },
   {
     id: "temple_crashers",
     name: "Temple Crashers",
-    fighterIds: ["tarot", "mungo", "bino"], // Mage + Tank + Trickster
+    fighterIds: ["lucretia", "sabrina", "karishad"],
   },
 ];
 
