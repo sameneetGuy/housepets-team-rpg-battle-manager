@@ -12,6 +12,8 @@
     "defenseBonus": 4,
     "speed": 2,
     "luck": 3,
+    "resistances": ["physical"],
+    "vulnerabilities": ["radiant"],
 
     "abilities": [
       {
@@ -40,7 +42,8 @@
         "aoe": "single",
         "targeting": "self",
         "aiWeight": 0.9,
-		"cooldown": 2,
+                "cooldown": 2,
+        "charges": 2,
 
         "effect": { "defenseBonus": 2 },
         "duration": 3,
@@ -115,12 +118,9 @@
           "defenseBonus": -1
         },
         "duration": 3,
-		
-		"save": {
-		  "stat": "luck",
-		  "dc": 12,
-		  "onSave": "reduced"
-		},
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "grantsDisadvantage": true,
 
         "description": "Bino's obnoxious barking rattles the enemy’s nerves."
       },
@@ -141,6 +141,7 @@
           "attackBonus": -1,
           "duration": 1
         },
+        "grantsDisadvantage": true,
 
         "description": "A cheap shot while the ref isn't looking."
       },
@@ -535,6 +536,8 @@
     "defenseBonus": 3,
     "speed": 2,
     "luck": 4,
+    "resistances": ["magic"],
+    "vulnerabilities": ["physical"],
 
     "abilities": [
       {
@@ -595,10 +598,12 @@
         "aoe": "random-2-enemies",
         "targeting": "any-enemy",
         "aiWeight": 1.7,
-		"cooldown": 2,
+                "cooldown": 2,
+        "charges": 2,
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+2", "2d10+2", "3d8+2"],
+        "damageType": "radiant",
 
         "description": "Joey calls down a concentrated shower of arcane stars on 2 foes."
       }
@@ -749,12 +754,9 @@
           "defenseBonus": -1
         },
         "duration": 1,
-		
-		"save": {
-		  "stat": "defenseBonus",
-		  "dc": 13,
-		  "onSave": "negate"
-		},
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "grantsDisadvantage": true,
 
         "description": "Keene manipulates the battlefield economy to rattle the opponent."
       },
@@ -1287,6 +1289,7 @@
             "duration": 1
           }
         },
+        "grantsDisadvantage": true,
 
         "description": "A fast series of feints that confuses the enemy and opens a window for Grape."
       },
@@ -1687,6 +1690,8 @@
     "defenseBonus": 3,
     "speed": 3,
     "luck": 4,
+    "resistances": ["shadow"],
+    "vulnerabilities": ["radiant"],
 
     "abilities": [
       {
@@ -1702,6 +1707,7 @@
 
         "hitStat": "magicBonus",
         "damageByRank": ["1d8+2", "2d6+2", "2d8+2"],
+        "damageType": "shadow",
 
         "description": "A bolt of shadowy energy fired with precision."
       },
@@ -1720,12 +1726,8 @@
 
         "effect": { "attackBonus": -2 },
         "duration": 2,
-		
-		"save": {
-		  "stat": "luck",
-		  "dc": 13,
-		  "onSave": "negate"
-		},
+        "saveStat": "luck",
+        "saveDifficulty": 13,
 
         "description": "A dark fog reduces accuracy of all enemies."
       },
@@ -1758,6 +1760,7 @@
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+1", "2d10+1", "3d8+2"],
+        "damageType": "radiant",
 
         "description": "A piercing astral strike launched at high velocity."
       }
@@ -1865,6 +1868,8 @@
     "defenseBonus": 2,
     "speed": 3,
     "luck": 4,
+    "resistances": ["radiant"],
+    "vulnerabilities": ["shadow"],
 
     "abilities": [
       {
@@ -1900,12 +1905,10 @@
         "damageByRank": ["1d6+1", "1d8+1", "2d4+2"],
         "effect": { "defenseBonus": -1 },
         "duration": 2,
-		
-		"save": {
-		  "stat": "defenseBonus",
-		  "dc": 12,
-		  "onSave": "negate"
-		},
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "applyCondition": "silenced",
+        "conditionDuration": 1,
 
         "description": "A minor curse that weakens the target's defenses."
       },
@@ -1927,6 +1930,7 @@
           "luck": 1,
           "defenseBonus": 1
         },
+        "grantsAdvantage": true,
         "duration": 3,
 
         "description": "Tarot glimpses possible futures, improving her team's reactions."
@@ -1941,10 +1945,12 @@
         "aoe": "enemy-team",
         "targeting": "any-enemy",
         "aiWeight": 1.3,
-		"cooldown": 4,
+                "cooldown": 4,
+        "charges": 2,
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+2", "2d10+2", "3d8+3"],
+        "damageType": "radiant",
 
         "description": "A psychic meteor slams into the enemy team in a burst of energy."
       }
@@ -2015,6 +2021,8 @@
           "speed": -1,
           "duration": 1
         },
+        "applyCondition": "stunned",
+        "conditionDuration": 1,
 
         "description": "A powerful strike that leaves enemies rattled."
       },
@@ -2051,6 +2059,8 @@
     "defenseBonus": 2,
     "speed": 4,
     "luck": 4,
+    "resistances": ["physical"],
+    "vulnerabilities": ["magic"],
 
     "abilities": [
       {
@@ -2117,7 +2127,8 @@
         "aoe": "enemy-team",
         "targeting": "any-enemy",
         "aiWeight": 1.4,
-		"cooldown": 4,
+                "cooldown": 4,
+        "charges": 2,
 
         "hitStat": "attackBonus",
         "damageByRank": ["2d8+1","2d10+1","3d8+2"],
