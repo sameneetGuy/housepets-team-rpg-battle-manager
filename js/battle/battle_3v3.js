@@ -479,34 +479,6 @@ function spendConditionTurn(fighter, condName) {
   return spent;
 }
 
-function ensureConditionState(fighter) {
-  if (!fighter.conditions) fighter.conditions = [];
-}
-
-function addConditionToFighter(fighter, condName, duration) {
-  ensureConditionState(fighter);
-  const extraDuration = Math.max(1, duration + 1);
-  const existing = fighter.conditions.find(c => c.name === condName);
-  if (existing) {
-    existing.remainingRounds = Math.max(existing.remainingRounds, extraDuration);
-  } else {
-    fighter.conditions.push({ name: condName, remainingRounds: extraDuration });
-  }
-}
-
-function spendConditionTurn(fighter, condName) {
-  if (!fighter.conditions || fighter.conditions.length === 0) return false;
-  let spent = false;
-  fighter.conditions = fighter.conditions.filter(cond => {
-    if (cond.name !== condName) return cond.remainingRounds > 0;
-    if (cond.remainingRounds <= 0) return false;
-    cond.remainingRounds -= 1;
-    spent = true;
-    return cond.remainingRounds > 0;
-  });
-  return spent;
-}
-
 // ---------- Ability Type Helpers ----------
 
 function isDamagingAbility(a) {
@@ -1516,19 +1488,6 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
     winner: seriesWinner, // "A", "B", or "DRAW" (for even number of games)
     log: seriesLogs.join("\n\n")
   };
-}
-
-const battleAPI = {
-  simulateTeamBattle,
-  simulateTeamSeries
-};
-
-export default battleAPI;
-
-// Provide CommonJS compatibility so Node-based tooling (tests, scripts)
-// can continue using require(...) without needing transpilation.
-if (typeof module !== "undefined") {
-  module.exports = battleAPI;
 }
 
 const battleAPI = {
