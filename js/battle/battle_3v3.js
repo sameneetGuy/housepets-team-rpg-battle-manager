@@ -1182,3 +1182,16 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
   };
 }
 
+const battleAPI = {
+  simulateTeamBattle,
+  simulateTeamSeries
+};
+
+export default battleAPI;
+
+// Provide CommonJS compatibility so Node-based tooling (tests, scripts)
+// can continue using require(...) without needing transpilation.
+if (typeof module !== "undefined") {
+  module.exports = battleAPI;
+}
+
