@@ -192,6 +192,22 @@ function tickConditions(fighters) {
   }
 }
 
+function tickReactions(fighters) {
+  for (const f of fighters) {
+    if (!f.reactions || f.reactions.length === 0) continue;
+    const remain = [];
+    for (const r of f.reactions) {
+      if (r.remainingRounds != null) {
+        r.remainingRounds -= 1;
+      }
+      if (r.remainingRounds == null || r.remainingRounds > 0) {
+        remain.push(r);
+      }
+    }
+    f.reactions = remain;
+  }
+}
+
 // ---------- Cooldowns ----------
 
 function tickCooldowns(fighters) {
@@ -271,6 +287,29 @@ function applyBuffOrDebuff(source, targets, ability, options = {}) {
   }
 
   return appliedTargets;
+}
+
+function ensureReactionState(fighter) {
+  if (!fighter.reactions) fighter.reactions = [];
+}
+
+function applyReactions(source, targets, ability) {
+  if (!ability.reaction) return [];
+
+  const duration = ability.reactionDuration || ability.duration || 2;
+  const applied = [];
+  for (const target of targets) {
+    if (!target || !isAlive(target)) continue;
+    ensureReactionState(target);
+    target.reactions.push({
+      ...ability.reaction,
+      source: source.name,
+      abilityName: ability.name,
+      remainingRounds: duration
+    });
+    applied.push(target);
+  }
+  return applied;
 }
 
 function applyConditions(attacker, targets, ability, options = {}) {
@@ -377,6 +416,28 @@ function consumeSpecialFlag(f, flagName) {
     return true;
   });
   return consumed;
+}
+
+function shiftPosition(target, shift) {
+  if (!target || !target.position) return null;
+  const order = ["front", "mid", "back"];
+  const idx = order.indexOf(target.position);
+  if (idx === -1) return null;
+  const next = Math.max(0, Math.min(order.length - 1, idx + shift));
+  const old = target.position;
+  target.position = order[next];
+  if (old === target.position) return null;
+  return { from: old, to: target.position };
+}
+
+function swapPositions(a, b) {
+  if (!a || !b) return null;
+  const oldA = a.position;
+  const oldB = b.position;
+  if (!oldA || !oldB || oldA === oldB) return null;
+  a.position = oldB;
+  b.position = oldA;
+  return { aFrom: oldA, aTo: a.position, bFrom: oldB, bTo: b.position };
 }
 
 function hasCondition(f, condName) {
@@ -544,6 +605,70 @@ function attemptHit(attacker, defender, ability) {
   const target = 10 + defVal;
 
   return { hit: total >= target, roll, total, target };
+}
+
+function triggerReactions(owner, trigger, context) {
+  if (!owner.reactions || owner.reactions.length === 0) return [];
+  const fired = [];
+  owner.reactions = owner.reactions.filter(r => {
+    if (r.trigger !== trigger) return true;
+
+    let shouldFire = true;
+    if (r.hpThreshold != null && context && context.target) {
+      const ratio = context.target.hp / context.target.maxHP;
+      if (ratio > r.hpThreshold) shouldFire = false;
+    }
+
+    if (shouldFire) {
+      if (r.action === "counter" && context && context.attacker && isAlive(context.attacker)) {
+        const dmg = rollDiceExpression(r.damage || "1d4+1");
+        const oldHP = context.attacker.hp;
+        context.attacker.hp = Math.max(0, context.attacker.hp - dmg);
+        context.log.push(
+          `${owner.name} reacts (${r.abilityName}) and strikes ${context.attacker.name} for ${dmg} (${oldHP} → ${context.attacker.hp}).`
+        );
+        if (!isAlive(context.attacker)) {
+          context.log.push(`${context.attacker.name} is knocked out!`);
+        }
+      } else if (r.action === "heal" && context) {
+        const target = r.target === "ally" ? context.ally || owner : owner;
+        if (target && isAlive(target)) {
+          const healAmount = rollDiceExpression(r.heal || "1d4+2");
+          const oldHP = target.hp;
+          target.hp = Math.min(target.maxHP, target.hp + healAmount);
+          context.log.push(
+            `${owner.name} reacts (${r.abilityName}) and heals ${target.name} for ${target.hp - oldHP} (${oldHP} → ${target.hp}).`
+          );
+        }
+      } else if (r.action === "buff") {
+        const buffTarget = r.target === "ally" ? context.ally || owner : owner;
+        if (buffTarget) {
+          if (!buffTarget.effects) buffTarget.effects = [];
+          buffTarget.effects.push({
+            stats: { ...(r.effect || {}) },
+            remainingRounds: r.duration || 2,
+            source: owner.name,
+            abilityName: r.abilityName || "Reaction",
+            isConcentration: false
+          });
+          context.log.push(
+            `${owner.name} reacts (${r.abilityName}) and grants a buff to ${buffTarget.name}.`
+          );
+        }
+      }
+
+      fired.push(r);
+      if (r.remainingUses != null) {
+        r.remainingUses -= 1;
+        return r.remainingUses > 0;
+      }
+      return false;
+    }
+
+    return true;
+  });
+
+  return fired;
 }
 
 function getAbilityDamageType(ability) {
@@ -1025,6 +1150,7 @@ function performAction(attacker, allies, enemies, round, logLines) {
         applyBuffOrDebuff(attacker, targetList, ability, { saveResults }) || [];
       buffedTargets = res;
     }
+    const reactionTargets = applyReactions(attacker, targetList, ability);
     const conditionResult = applyConditions(attacker, targetList, ability, {
       saveResults
     });
@@ -1037,6 +1163,7 @@ function performAction(attacker, allies, enemies, round, logLines) {
     for (const t of conditionResult.applied) impactedSet.add(t);
     for (const t of advResult.advantage) impactedSet.add(t);
     for (const t of advResult.disadvantage) impactedSet.add(t);
+    for (const t of reactionTargets) impactedSet.add(t);
 
     return { impacted: Array.from(impactedSet) };
   };
@@ -1060,6 +1187,12 @@ function performAction(attacker, allies, enemies, round, logLines) {
         logLines.push(
           `${attacker.name} uses ${ability.name} on ${target.name}, but misses.`
         );
+
+        triggerReactions(target, "onMissed", {
+          attacker,
+          target,
+          log: logLines
+        });
 
         if (
           consumeSpecialFlag(target, "counterNextMiss") &&
@@ -1117,16 +1250,70 @@ function performAction(attacker, allies, enemies, round, logLines) {
         `${attacker.name} hits ${target.name} with ${ability.name}${critText} for ${dmg}${mitigationText} (${oldHP} → ${target.hp}).`
       );
 
+      triggerReactions(target, "allyHit", {
+        attacker,
+        target,
+        log: logLines
+      });
+
+      for (const ally of enemies) {
+        if (ally === target || !isAlive(ally)) continue;
+        triggerReactions(ally, "allyHit", {
+          attacker,
+          target,
+          ally: target,
+          log: logLines
+        });
+      }
+
       // If this damaging ability also has an effect (e.g. Hex), apply it (with save inside).
       if (sharedSaveResults && saveResult) {
         sharedSaveResults.set(target, saveResult);
       }
       applySecondaryEffects([target]);
 
+      if (ability.positionShift) {
+        const moved = shiftPosition(target, ability.positionShift);
+        if (moved) {
+          logLines.push(
+            `${target.name} is ${ability.positionShift > 0 ? "pushed" : "pulled"} ${moved.from} → ${moved.to}.`
+          );
+        }
+      }
+
       if (ability.extraEffect) applyExtraEffects(attacker, allies, enemies, target, ability);
+
+      if (
+        ability.swapPositions === "withTarget" &&
+        targets.length > 0 &&
+        targets[0]
+      ) {
+        const swapped = swapPositions(attacker, targets[0]);
+        if (swapped) {
+          logLines.push(
+            `${attacker.name} swaps places with ${targets[0].name} (${swapped.aTo} ↔ ${swapped.bTo}).`
+          );
+        }
+      }
 
       if (!isAlive(target)) {
         logLines.push(`${target.name} is knocked out!`);
+      }
+
+      if (target.hp > 0) {
+        triggerReactions(attacker, "enemyLowHP", {
+          target,
+          attacker,
+          log: logLines
+        });
+        for (const ally of allies) {
+          if (!isAlive(ally)) continue;
+          triggerReactions(ally, "enemyLowHP", {
+            target,
+            attacker,
+            log: logLines
+          });
+        }
       }
     }
     finalizeSilence();
@@ -1149,6 +1336,15 @@ function performAction(attacker, allies, enemies, round, logLines) {
       }
 
       applySecondaryEffects([t]);
+
+      if (ability.swapPositions === "withTarget") {
+        const swapped = swapPositions(attacker, t);
+        if (swapped) {
+          logLines.push(
+            `${attacker.name} swaps places with ${t.name} (${swapped.aTo} ↔ ${swapped.bTo}).`
+          );
+        }
+      }
     }
     finalizeSilence();
     return;
@@ -1159,6 +1355,14 @@ function performAction(attacker, allies, enemies, round, logLines) {
   if (result.impacted.length > 0) {
     const names = result.impacted.map(t => t.name).join(", ");
     logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
+    if (ability.swapPositions === "withTarget" && targets.length > 0) {
+      const swapped = swapPositions(attacker, targets[0]);
+      if (swapped) {
+        logLines.push(
+          `${attacker.name} swaps places with ${targets[0].name} (${swapped.aTo} ↔ ${swapped.bTo}).`
+        );
+      }
+    }
   } else {
     logLines.push(`${attacker.name} uses ${ability.name}, but it has no effect.`);
   }
@@ -1194,6 +1398,7 @@ function cloneFighterForBattle(f) {
   c.conditions = [];
   c.cooldowns = {}; // abilityId -> remaining cooldown
   c.usedCharges = {};
+  c.reactions = [];
   return c;
 }
 
