@@ -516,6 +516,31 @@ function attemptHit(attacker, defender, ability) {
   return { hit: total >= target, roll, total, target };
 }
 
+function getAbilityDamageType(ability) {
+  if (ability.damageType) return ability.damageType;
+  if (ability.type === "magic") return "magic";
+  if (ability.type === "physical") return "physical";
+  return "physical";
+}
+
+function adjustDamageForResistances(damage, defender, damageType) {
+  if (!defender) return damage;
+
+  const resists = defender.resistances || [];
+  const vuln = defender.vulnerabilities || [];
+  let result = damage;
+
+  if (resists.includes(damageType)) {
+    result = Math.round(result * 0.75);
+  }
+
+  if (vuln.includes(damageType)) {
+    result = Math.round(result * 1.25);
+  }
+
+  return result;
+}
+
 function computeDamage(attacker, defender, ability) {
   const arr = ability.damageByRank;
   const idx = Math.min((ability.rank || 1) - 1, arr.length - 1);
@@ -540,10 +565,13 @@ function computeDamage(attacker, defender, ability) {
     dmg += ability.extraDamageIfTargetDebuffed;
   }
 
+  const damageType = getAbilityDamageType(ability);
+  dmg = adjustDamageForResistances(dmg, defender, damageType);
+
   if (dmg < 1) dmg = 1;
 
   // Return both damage and crit info
-  return { dmg, isCrit };
+  return { dmg, isCrit, damageType };
 }
 
 function computeHealAmount(ability) {
@@ -753,6 +781,19 @@ function scoreAbility(attacker, allies, enemies, ability, round) {
   return score;
 }
 
+function hasChargesAvailable(fighter, ability) {
+  if (!ability.charges || ability.charges <= 0) return true;
+  if (!fighter.usedCharges) fighter.usedCharges = {};
+  const used = fighter.usedCharges[ability.id] || 0;
+  return used < ability.charges;
+}
+
+function spendAbilityCharge(fighter, ability) {
+  if (!ability.charges || ability.charges <= 0) return;
+  if (!fighter.usedCharges) fighter.usedCharges = {};
+  fighter.usedCharges[ability.id] = (fighter.usedCharges[ability.id] || 0) + 1;
+}
+
 function chooseAbility(attacker, allies, enemies, round) {
   const usable = attacker.abilities || [];
   if (usable.length === 0) return null;
@@ -767,6 +808,10 @@ function chooseAbility(attacker, allies, enemies, round) {
     const cd = ab.cooldown || 0;
     if (cdMap[ab.id] && cdMap[ab.id] > 0) {
       continue; // still on cooldown
+    }
+
+    if (!hasChargesAvailable(attacker, ab)) {
+      continue;
     }
 
     // Silenced: skip magic abilities entirely
@@ -836,6 +881,8 @@ function performAction(attacker, allies, enemies, round, logLines) {
     finalizeSilence();
     return;
   }
+
+  spendAbilityCharge(attacker, ability);
 
   const isDamage = isDamagingAbility(ability);
   const isHeal = isHealingAbility(ability);
@@ -1019,6 +1066,7 @@ function cloneFighterForBattle(f) {
   c.effects = [];
   c.conditions = [];
   c.cooldowns = {}; // abilityId -> remaining cooldown
+  c.usedCharges = {};
   return c;
 }
 
@@ -1107,8 +1155,14 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
 
   for (let g = 1; g <= games; g++) {
     // Reset HP only; keep effects, cooldowns, and other state.
-    for (const f of aF) f.hp = f.maxHP;
-    for (const f of bF) f.hp = f.maxHP;
+    for (const f of aF) {
+      f.hp = f.maxHP;
+      f.usedCharges = {};
+    }
+    for (const f of bF) {
+      f.hp = f.maxHP;
+      f.usedCharges = {};
+    }
 
     const { winner, log } = runBattleOnExistingFighters(aF, bF);
 
@@ -1126,5 +1180,18 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
     winner: seriesWinner, // "A", "B", or "DRAW" (for even number of games)
     log: seriesLogs.join("\n\n")
   };
+}
+
+const battleAPI = {
+  simulateTeamBattle,
+  simulateTeamSeries
+};
+
+export default battleAPI;
+
+// Provide CommonJS compatibility so Node-based tooling (tests, scripts)
+// can continue using require(...) without needing transpilation.
+if (typeof module !== "undefined") {
+  module.exports = battleAPI;
 }
 

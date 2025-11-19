@@ -12,6 +12,8 @@
     "defenseBonus": 4,
     "speed": 2,
     "luck": 3,
+    "resistances": ["physical"],
+    "vulnerabilities": ["radiant"],
 
     "abilities": [
       {
@@ -40,7 +42,8 @@
         "aoe": "single",
         "targeting": "self",
         "aiWeight": 0.9,
-		"cooldown": 2,
+                "cooldown": 2,
+        "charges": 2,
 
         "effect": { "defenseBonus": 2 },
         "duration": 3,
@@ -533,6 +536,8 @@
     "defenseBonus": 3,
     "speed": 2,
     "luck": 4,
+    "resistances": ["magic"],
+    "vulnerabilities": ["physical"],
 
     "abilities": [
       {
@@ -593,10 +598,12 @@
         "aoe": "random-2-enemies",
         "targeting": "any-enemy",
         "aiWeight": 1.7,
-		"cooldown": 2,
+                "cooldown": 2,
+        "charges": 2,
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+2", "2d10+2", "3d8+2"],
+        "damageType": "radiant",
 
         "description": "Joey calls down a concentrated shower of arcane stars on 2 foes."
       }
@@ -1683,6 +1690,8 @@
     "defenseBonus": 3,
     "speed": 3,
     "luck": 4,
+    "resistances": ["shadow"],
+    "vulnerabilities": ["radiant"],
 
     "abilities": [
       {
@@ -1698,6 +1707,7 @@
 
         "hitStat": "magicBonus",
         "damageByRank": ["1d8+2", "2d6+2", "2d8+2"],
+        "damageType": "shadow",
 
         "description": "A bolt of shadowy energy fired with precision."
       },
@@ -1750,6 +1760,7 @@
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+1", "2d10+1", "3d8+2"],
+        "damageType": "radiant",
 
         "description": "A piercing astral strike launched at high velocity."
       }
@@ -1857,6 +1868,8 @@
     "defenseBonus": 2,
     "speed": 3,
     "luck": 4,
+    "resistances": ["radiant"],
+    "vulnerabilities": ["shadow"],
 
     "abilities": [
       {
@@ -1932,10 +1945,12 @@
         "aoe": "enemy-team",
         "targeting": "any-enemy",
         "aiWeight": 1.3,
-		"cooldown": 4,
+                "cooldown": 4,
+        "charges": 2,
 
         "hitStat": "magicBonus",
         "damageByRank": ["2d8+2", "2d10+2", "3d8+3"],
+        "damageType": "radiant",
 
         "description": "A psychic meteor slams into the enemy team in a burst of energy."
       }
@@ -2044,6 +2059,8 @@
     "defenseBonus": 2,
     "speed": 4,
     "luck": 4,
+    "resistances": ["physical"],
+    "vulnerabilities": ["magic"],
 
     "abilities": [
       {
@@ -2110,7 +2127,8 @@
         "aoe": "enemy-team",
         "targeting": "any-enemy",
         "aiWeight": 1.4,
-		"cooldown": 4,
+                "cooldown": 4,
+        "charges": 2,
 
         "hitStat": "attackBonus",
         "damageByRank": ["2d8+1","2d10+1","3d8+2"],
