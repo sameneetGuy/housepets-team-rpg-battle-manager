@@ -254,6 +254,7 @@
           "1d6+1",
           "1d8+1"
         ],
+        "positionShift": 1,
         "extraEffect": {
           "attackBonus": -1,
           "duration": 1
@@ -286,10 +287,12 @@
         "aoe": "single",
         "targeting": "self",
         "aiWeight": 0.7,
-        "effect": {
-          "counterNextMiss": true
+        "reaction": {
+          "trigger": "onMissed",
+          "action": "counter",
+          "damage": "1d4+1"
         },
-        "duration": 99,
+        "reactionDuration": 99,
         "description": "If the next attack against Bino misses, he immediately counterattacks."
       }
     ],
@@ -331,6 +334,7 @@
           "1d6+1",
           "1d8+1"
         ],
+        "positionShift": 1,
         "extraEffect": {
           "attackBonus": -1,
           "duration": 1
@@ -363,10 +367,12 @@
         "aoe": "single",
         "targeting": "self",
         "aiWeight": 0.7,
-        "effect": {
-          "counterNextMiss": true
+        "reaction": {
+          "trigger": "onMissed",
+          "action": "counter",
+          "damage": "1d4+1"
         },
-        "duration": 99,
+        "reactionDuration": 99,
         "description": "If the next attack against Bino misses, he immediately counterattacks."
       },
       {
@@ -1463,6 +1469,7 @@
           "1d8+1",
           "2d4+2"
         ],
+        "positionShift": -1,
         "extraEffect": {
           "speed": -1,
           "duration": 1
@@ -1501,6 +1508,40 @@
         },
         "duration": 2,
         "description": "A chaotic morale boost that sharpens reflexes."
+      },
+      {
+        "id": "karishad_prank_swap",
+        "name": "Prank Swap",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1,
+        "swapPositions": "withTarget",
+        "effect": {
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "Karishad tumbles through the fray, trading places with an ally while boosting their luck."
+      },
+      {
+        "id": "karishad_comedic_rescue",
+        "name": "Comedic Rescue",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "allyHit",
+          "action": "heal",
+          "heal": "1d4+1",
+          "target": "ally"
+        },
+        "reactionDuration": 3,
+        "description": "Whenever an ally gets bonked, Karishad swoops in with a quick patch-up gag."
       }
     ],
     "loadoutSize": 4,
@@ -1540,6 +1581,7 @@
           "1d8+1",
           "2d4+2"
         ],
+        "positionShift": -1,
         "extraEffect": {
           "speed": -1,
           "duration": 1
@@ -1578,6 +1620,40 @@
         },
         "duration": 2,
         "description": "A chaotic morale boost that sharpens reflexes."
+      },
+      {
+        "id": "karishad_prank_swap",
+        "name": "Prank Swap",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1,
+        "swapPositions": "withTarget",
+        "effect": {
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "Karishad tumbles through the fray, trading places with an ally while boosting their luck."
+      },
+      {
+        "id": "karishad_comedic_rescue",
+        "name": "Comedic Rescue",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "allyHit",
+          "action": "heal",
+          "heal": "1d4+1",
+          "target": "ally"
+        },
+        "reactionDuration": 3,
+        "description": "Whenever an ally gets bonked, Karishad swoops in with a quick patch-up gag."
       },
       {
         "id": "karishad_shadowstep",
@@ -2903,6 +2979,7 @@
           "1d8+2",
           "2d4+2"
         ],
+        "positionShift": -1,
         "description": "A precise cut that exploits tiny openings."
       },
       {
@@ -2919,6 +2996,40 @@
         },
         "duration": 99,
         "description": "Maxwell slips away in a swirl of motion, causing the next attack aimed at him to miss completely."
+      },
+      {
+        "id": "maxwell_switcheroo",
+        "name": "Switcheroo",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1,
+        "swapPositions": "withTarget",
+        "effect": {
+          "speed": 1
+        },
+        "duration": 1,
+        "description": "Maxwell darts around to swap places with an ally, giving them a quick boost."
+      },
+      {
+        "id": "maxwell_predatory_grin",
+        "name": "Predatory Grin",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "enemyLowHP",
+          "action": "buff",
+          "effect": { "attackBonus": 1 },
+          "duration": 2
+        },
+        "reactionDuration": 3,
+        "description": "Maxwell senses weakness and prepares a finishing blow whenever an enemy falters."
       }
     ],
     "loadoutSize": 4,
@@ -2969,6 +3080,40 @@
         "description": "A fast series of feints that confuses the enemy and opens a window for Grape."
       },
       {
+        "id": "maxwell_switcheroo",
+        "name": "Switcheroo",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1,
+        "swapPositions": "withTarget",
+        "effect": {
+          "speed": 1
+        },
+        "duration": 1,
+        "description": "Maxwell darts around to swap places with an ally, giving them a quick boost."
+      },
+      {
+        "id": "maxwell_predatory_grin",
+        "name": "Predatory Grin",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "enemyLowHP",
+          "action": "buff",
+          "effect": { "attackBonus": 1 },
+          "duration": 2
+        },
+        "reactionDuration": 3,
+        "description": "Maxwell senses weakness and prepares a finishing blow whenever an enemy falters."
+      },
+      {
         "id": "maxwell_tricky_slash",
         "name": "Tricky Slash",
         "type": "physical",
@@ -2983,6 +3128,7 @@
           "1d8+2",
           "2d4+2"
         ],
+        "positionShift": -1,
         "description": "A precise cut that exploits tiny openings."
       },
       {
