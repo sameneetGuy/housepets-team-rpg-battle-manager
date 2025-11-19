@@ -31,6 +31,34 @@ function rollD20() {
  * Returns an object describing whether the effect applies and how strongly.
  */
 function evaluateSavingThrow(target, ability) {
+  if (ability.saveStat && ability.saveDifficulty != null) {
+    const stat = ability.saveStat;
+    const dc = ability.saveDifficulty;
+    const statValue = getModifiedStat(target, stat);
+    const roll = rollD20() + statValue;
+    const success = roll >= dc;
+
+    if (success) {
+      return {
+        applies: false,
+        scale: 0,
+        success: true,
+        outcome: "negate",
+        dc,
+        roll
+      };
+    }
+
+    return {
+      applies: true,
+      scale: 1,
+      success: false,
+      outcome: "fail",
+      dc,
+      roll
+    };
+  }
+
   const save = ability.save;
   if (!save) {
     return { applies: true, scale: 1, success: false };
@@ -150,6 +178,18 @@ function tickEffects(fighters) {
   }
 }
 
+function tickConditions(fighters) {
+  for (const f of fighters) {
+    if (!f.conditions || f.conditions.length === 0) continue;
+    const remain = [];
+    for (const cond of f.conditions) {
+      cond.remainingRounds -= 1;
+      if (cond.remainingRounds > 0) remain.push(cond);
+    }
+    f.conditions = remain;
+  }
+}
+
 // ---------- Cooldowns ----------
 
 function tickCooldowns(fighters) {
@@ -182,9 +222,13 @@ function applyBuffOrDebuff(source, targets, ability, options = {}) {
   for (const t of targets) {
     // Saving throw hook: if this ability has a save, check per target
     let saveResult = null;
+    const canSave = ability.save || (ability.saveStat && ability.saveDifficulty != null);
     if (saveResultsMap && saveResultsMap.has(t)) {
       saveResult = saveResultsMap.get(t);
-    } else if (ability.save) {
+    } else if (saveResultsMap && canSave) {
+      saveResult = evaluateSavingThrow(t, ability);
+      saveResultsMap.set(t, saveResult);
+    } else if (canSave) {
       saveResult = evaluateSavingThrow(t, ability);
     }
 
@@ -227,6 +271,98 @@ function applyBuffOrDebuff(source, targets, ability, options = {}) {
   return appliedTargets;
 }
 
+function applyConditions(attacker, targets, ability, options = {}) {
+  if (!ability.applyCondition) {
+    return { applied: [], resisted: [] };
+  }
+
+  const duration = ability.conditionDuration > 0 ? ability.conditionDuration : 1;
+  const applied = [];
+  const resisted = [];
+  const saveResultsMap = options.saveResults instanceof Map ? options.saveResults : null;
+  const canSave = ability.save || (ability.saveStat && ability.saveDifficulty != null);
+
+  for (const target of targets) {
+    if (!isAlive(target)) continue;
+
+    let saveResult = null;
+    if (saveResultsMap && saveResultsMap.has(target)) {
+      saveResult = saveResultsMap.get(target);
+    } else if (saveResultsMap && canSave) {
+      saveResult = evaluateSavingThrow(target, ability);
+      saveResultsMap.set(target, saveResult);
+    } else if (canSave) {
+      saveResult = evaluateSavingThrow(target, ability);
+    }
+
+    if (saveResult && !saveResult.applies) {
+      resisted.push(target);
+      continue;
+    }
+
+    addConditionToFighter(target, ability.applyCondition, duration);
+    applied.push(target);
+  }
+
+  return { applied, resisted };
+}
+
+const ADVANTAGE_EFFECT_DURATION = 2;
+
+function grantAttackFlagEffect(target, flagName, sourceName, abilityName) {
+  if (!target.effects) target.effects = [];
+  target.effects.push({
+    stats: { [flagName]: true },
+    remainingRounds: ADVANTAGE_EFFECT_DURATION,
+    source: sourceName,
+    abilityName,
+    isConcentration: false
+  });
+}
+
+function applyAttackRollModifiers(source, targets, ability) {
+  const result = { advantage: [], disadvantage: [] };
+  if (!ability.grantsAdvantage && !ability.grantsDisadvantage) {
+    return result;
+  }
+
+  for (const target of targets) {
+    if (!target || !isAlive(target)) continue;
+
+    if (ability.grantsAdvantage) {
+      grantAttackFlagEffect(target, "attackAdvantage", source.name, ability.name);
+      result.advantage.push(target);
+    }
+
+    if (ability.grantsDisadvantage) {
+      grantAttackFlagEffect(target, "attackDisadvantage", source.name, ability.name);
+      result.disadvantage.push(target);
+    }
+  }
+
+  return result;
+}
+
+function logConditionApplications(logLines, conditionName, result) {
+  if (!conditionName) return;
+  const display = conditionName;
+  for (const target of result.applied) {
+    logLines.push(`${target.name} is ${display}!`);
+  }
+  for (const target of result.resisted) {
+    logLines.push(`${target.name} resists being ${display}.`);
+  }
+}
+
+function logAttackModifierResults(logLines, result) {
+  for (const target of result.advantage) {
+    logLines.push(`${target.name} gains advantage on their next attack.`);
+  }
+  for (const target of result.disadvantage) {
+    logLines.push(`${target.name} suffers disadvantage on their next attack.`);
+  }
+}
+
 function consumeSpecialFlag(f, flagName) {
   if (!f.effects || f.effects.length === 0) return false;
   let consumed = false;
@@ -242,8 +378,42 @@ function consumeSpecialFlag(f, flagName) {
 }
 
 function hasCondition(f, condName) {
+  if (f.conditions && f.conditions.length > 0) {
+    if (f.conditions.some(c => c.name === condName && c.remainingRounds > 0)) {
+      return true;
+    }
+  }
+
   if (!f.effects || f.effects.length === 0) return false;
   return f.effects.some(e => e.stats && e.stats[condName]);
+}
+
+function ensureConditionState(fighter) {
+  if (!fighter.conditions) fighter.conditions = [];
+}
+
+function addConditionToFighter(fighter, condName, duration) {
+  ensureConditionState(fighter);
+  const extraDuration = Math.max(1, duration + 1);
+  const existing = fighter.conditions.find(c => c.name === condName);
+  if (existing) {
+    existing.remainingRounds = Math.max(existing.remainingRounds, extraDuration);
+  } else {
+    fighter.conditions.push({ name: condName, remainingRounds: extraDuration });
+  }
+}
+
+function spendConditionTurn(fighter, condName) {
+  if (!fighter.conditions || fighter.conditions.length === 0) return false;
+  let spent = false;
+  fighter.conditions = fighter.conditions.filter(cond => {
+    if (cond.name !== condName) return cond.remainingRounds > 0;
+    if (cond.remainingRounds <= 0) return false;
+    cond.remainingRounds -= 1;
+    spent = true;
+    return cond.remainingRounds > 0;
+  });
+  return spent;
 }
 
 // ---------- Ability Type Helpers ----------
@@ -346,6 +516,107 @@ function attemptHit(attacker, defender, ability) {
   return { hit: total >= target, roll, total, target };
 }
 
+function getAbilityDamageType(ability) {
+  if (ability.damageType) return ability.damageType;
+  if (ability.type === "magic") return "magic";
+  if (ability.type === "physical") return "physical";
+  return "physical";
+}
+
+function adjustDamageForResistances(damage, defender, damageType) {
+  if (!defender) return damage;
+
+  const resists = defender.resistances || [];
+  const vuln = defender.vulnerabilities || [];
+  let result = damage;
+
+  if (resists.includes(damageType)) {
+    result = Math.round(result * 0.75);
+  }
+
+  if (vuln.includes(damageType)) {
+    result = Math.round(result * 1.25);
+  }
+
+  return result;
+}
+
+function scoreAbilityForLoadout(fighter, ability, opponents) {
+  let score = ability.aiWeight != null ? ability.aiWeight : 1;
+
+  if (isHealingAbility(ability)) score += 0.6;
+  if (hasEffectObject(ability) || ability.applyCondition) score += 0.15;
+  if (ability.aoe && ability.aoe !== "single") score += 0.2;
+
+  const damageType = isDamagingAbility(ability) ? getAbilityDamageType(ability) : null;
+  if (damageType) {
+    const vulnCount = opponents.filter(o => (o.vulnerabilities || []).includes(damageType)).length;
+    const resistCount = opponents.filter(o => (o.resistances || []).includes(damageType)).length;
+    score += vulnCount * 0.25;
+    score -= resistCount * 0.2;
+  }
+
+  const pinned = fighter.coreAbilities || [];
+  const recommended = fighter.activeAbilities || [];
+  if (pinned.includes(ability.id)) score += 0.4;
+  else if (recommended.includes(ability.id)) score += 0.2;
+
+  score *= 0.9 + Math.random() * 0.2;
+  return Math.max(score, 0.05);
+}
+
+function getAbilityPool(fighter) {
+  if (fighter.abilityPool && fighter.abilityPool.length > 0) return fighter.abilityPool;
+  return fighter.abilities || [];
+}
+
+function chooseLoadout(fighter, opponents) {
+  const pool = getAbilityPool(fighter);
+  const loadoutSize = fighter.loadoutSize || 4;
+  const abilityMap = new Map(pool.map(ab => [ab.id, ab]));
+  const chosen = [];
+  const chosenIds = new Set();
+
+  for (const id of fighter.coreAbilities || []) {
+    if (abilityMap.has(id)) {
+      chosen.push(abilityMap.get(id));
+      chosenIds.add(id);
+    }
+  }
+
+  const scored = pool
+    .filter(ab => !chosenIds.has(ab.id))
+    .map(ab => ({ ab, score: scoreAbilityForLoadout(fighter, ab, opponents) }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  for (const item of scored) {
+    if (chosen.length >= loadoutSize) break;
+    chosen.push(item.ab);
+    chosenIds.add(item.ab.id);
+  }
+
+  // If we still need filler (unlikely), just add the remaining highest AI weight moves.
+  if (chosen.length < loadoutSize) {
+    const leftovers = pool
+      .filter(ab => !chosenIds.has(ab.id))
+      .sort((a, b) => (b.aiWeight || 1) - (a.aiWeight || 1));
+    for (const ab of leftovers) {
+      if (chosen.length >= loadoutSize) break;
+      chosen.push(ab);
+    }
+  }
+
+  return chosen.slice(0, loadoutSize);
+}
+
+function prepareTeamLoadouts(team, opponents) {
+  return team.map(f => ({
+    ...f,
+    abilities: chooseLoadout(f, opponents)
+  }));
+}
+
 function computeDamage(attacker, defender, ability) {
   const arr = ability.damageByRank;
   const idx = Math.min((ability.rank || 1) - 1, arr.length - 1);
@@ -370,10 +641,13 @@ function computeDamage(attacker, defender, ability) {
     dmg += ability.extraDamageIfTargetDebuffed;
   }
 
+  const damageType = getAbilityDamageType(ability);
+  dmg = adjustDamageForResistances(dmg, defender, damageType);
+
   if (dmg < 1) dmg = 1;
 
   // Return both damage and crit info
-  return { dmg, isCrit };
+  return { dmg, isCrit, damageType };
 }
 
 function computeHealAmount(ability) {
@@ -583,6 +857,19 @@ function scoreAbility(attacker, allies, enemies, ability, round) {
   return score;
 }
 
+function hasChargesAvailable(fighter, ability) {
+  if (!ability.charges || ability.charges <= 0) return true;
+  if (!fighter.usedCharges) fighter.usedCharges = {};
+  const used = fighter.usedCharges[ability.id] || 0;
+  return used < ability.charges;
+}
+
+function spendAbilityCharge(fighter, ability) {
+  if (!ability.charges || ability.charges <= 0) return;
+  if (!fighter.usedCharges) fighter.usedCharges = {};
+  fighter.usedCharges[ability.id] = (fighter.usedCharges[ability.id] || 0) + 1;
+}
+
 function chooseAbility(attacker, allies, enemies, round) {
   const usable = attacker.abilities || [];
   if (usable.length === 0) return null;
@@ -597,6 +884,10 @@ function chooseAbility(attacker, allies, enemies, round) {
     const cd = ab.cooldown || 0;
     if (cdMap[ab.id] && cdMap[ab.id] > 0) {
       continue; // still on cooldown
+    }
+
+    if (!hasChargesAvailable(attacker, ab)) {
+      continue;
     }
 
     // Silenced: skip magic abilities entirely
@@ -633,18 +924,26 @@ function chooseAbility(attacker, allies, enemies, round) {
 
 function performAction(attacker, allies, enemies, round, logLines) {
   if (!isAlive(attacker)) return;
-  
+
   // Stunned: skip this action entirely
   if (hasCondition(attacker, "stunned")) {
     logLines.push(`${attacker.name} is stunned and can't act this round.`);
+    spendConditionTurn(attacker, "stunned");
     return;
   }
+
+  const silencedAtTurnStart = hasCondition(attacker, "silenced");
 
   const ability = chooseAbility(attacker, allies, enemies, round);
   if (!ability) {
     logLines.push(`${attacker.name} hesitates.`);
+    if (silencedAtTurnStart) spendConditionTurn(attacker, "silenced");
     return;
   }
+
+  const finalizeSilence = () => {
+    if (silencedAtTurnStart) spendConditionTurn(attacker, "silenced");
+  };
 
   // Start cooldown as soon as ability is chosen (like spending a spell slot)
   if (!attacker.cooldowns) attacker.cooldowns = {};
@@ -655,12 +954,41 @@ function performAction(attacker, allies, enemies, round, logLines) {
   const { targets } = selectTargets(attacker, allies, enemies, ability);
   if (!targets || targets.length === 0) {
     logLines.push(`${attacker.name} uses ${ability.name}, but finds no valid target.`);
+    finalizeSilence();
     return;
   }
+
+  spendAbilityCharge(attacker, ability);
 
   const isDamage = isDamagingAbility(ability);
   const isHeal = isHealingAbility(ability);
   const hasBuff = hasEffectObject(ability);
+  const usesSavingThrow = !!ability.save || (ability.saveStat && ability.saveDifficulty != null);
+  const sharedSaveResults = usesSavingThrow ? new Map() : null;
+
+  const applySecondaryEffects = targetList => {
+    const saveResults = sharedSaveResults;
+    let buffedTargets = [];
+    if (hasBuff) {
+      const res =
+        applyBuffOrDebuff(attacker, targetList, ability, { saveResults }) || [];
+      buffedTargets = res;
+    }
+    const conditionResult = applyConditions(attacker, targetList, ability, {
+      saveResults
+    });
+    logConditionApplications(logLines, ability.applyCondition, conditionResult);
+    const advResult = applyAttackRollModifiers(attacker, targetList, ability);
+    logAttackModifierResults(logLines, advResult);
+
+    const impactedSet = new Set();
+    for (const t of buffedTargets) impactedSet.add(t);
+    for (const t of conditionResult.applied) impactedSet.add(t);
+    for (const t of advResult.advantage) impactedSet.add(t);
+    for (const t of advResult.disadvantage) impactedSet.add(t);
+
+    return { impacted: Array.from(impactedSet) };
+  };
 
   if (isDamage) {
     const allEnemySide = enemies;
@@ -701,7 +1029,15 @@ function performAction(attacker, allies, enemies, round, logLines) {
         continue;
       }
 
-      const saveResult = ability.save ? evaluateSavingThrow(target, ability) : null;
+      let saveResult = null;
+      if (ability.save) {
+        if (sharedSaveResults && sharedSaveResults.has(target)) {
+          saveResult = sharedSaveResults.get(target);
+        } else {
+          saveResult = evaluateSavingThrow(target, ability);
+          if (sharedSaveResults) sharedSaveResults.set(target, saveResult);
+        }
+      }
       if (saveResult && !saveResult.applies) {
         logLines.push(
           `${attacker.name} uses ${ability.name} on ${target.name}, but they resist the effect.`
@@ -731,8 +1067,10 @@ function performAction(attacker, allies, enemies, round, logLines) {
       );
 
       // If this damaging ability also has an effect (e.g. Hex), apply it (with save inside).
-      const saveResults = saveResult ? new Map([[target, saveResult]]) : null;
-      if (hasBuff) applyBuffOrDebuff(attacker, [target], ability, { saveResults });
+      if (sharedSaveResults && saveResult) {
+        sharedSaveResults.set(target, saveResult);
+      }
+      applySecondaryEffects([target]);
 
       if (ability.extraEffect) applyExtraEffects(attacker, allies, enemies, target, ability);
 
@@ -740,6 +1078,7 @@ function performAction(attacker, allies, enemies, round, logLines) {
         logLines.push(`${target.name} is knocked out!`);
       }
     }
+    finalizeSilence();
     return;
   }
 
@@ -758,24 +1097,21 @@ function performAction(attacker, allies, enemies, round, logLines) {
         );
       }
 
-      if (hasBuff) applyBuffOrDebuff(attacker, [t], ability);
+      applySecondaryEffects([t]);
     }
+    finalizeSilence();
     return;
   }
 
   // Pure buff / utility (includes debuffs like Dark Mist, Taunting Bark, etc.)
-  if (hasBuff) {
-    const affected = applyBuffOrDebuff(attacker, targets, ability);
-    if (affected && affected.length > 0) {
-      const names = affected.map(t => t.name).join(", ");
-      logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
-    } else {
-      logLines.push(`${attacker.name} uses ${ability.name}, but it has no effect.`);
-    }
-    return;
+  const result = applySecondaryEffects(targets);
+  if (result.impacted.length > 0) {
+    const names = result.impacted.map(t => t.name).join(", ");
+    logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
+  } else {
+    logLines.push(`${attacker.name} uses ${ability.name}, but it has no effect.`);
   }
-
-  logLines.push(`${attacker.name} uses ${ability.name}, but nothing obvious happens.`);
+  finalizeSilence();
 }
 
 // ---------- Turn Order ----------
@@ -804,7 +1140,9 @@ function cloneFighterForBattle(f) {
   const c = { ...f };
   c.hp = c.maxHP;
   c.effects = [];
+  c.conditions = [];
   c.cooldowns = {}; // abilityId -> remaining cooldown
+  c.usedCharges = {};
   return c;
 }
 
@@ -833,6 +1171,7 @@ function runBattleOnExistingFighters(aF, bF) {
     log.push(`-- Round ${round} --`);
 
     tickEffects([...aF, ...bF]);
+    tickConditions([...aF, ...bF]);
     tickCooldowns([...aF, ...bF]);
 
     const turnOrder = buildTurnOrder([...aF, ...bF]);
@@ -876,15 +1215,19 @@ function runBattleOnExistingFighters(aF, bF) {
 
 // Single-battle entrypoint (used for places that still want BO1, like Super Cup)
 export function simulateTeamBattle(teamA, teamB) {
-  const aF = teamA.map(cloneFighterForBattle);
-  const bF = teamB.map(cloneFighterForBattle);
+  const preparedA = prepareTeamLoadouts(teamA, teamB);
+  const preparedB = prepareTeamLoadouts(teamB, teamA);
+  const aF = preparedA.map(cloneFighterForBattle);
+  const bF = preparedB.map(cloneFighterForBattle);
   return runBattleOnExistingFighters(aF, bF);
 }
 
 // Multi-game series: HP resets between games, but effects/cooldowns/flags persist.
 export function simulateTeamSeries(teamA, teamB, games = 2) {
-  const aF = teamA.map(cloneFighterForBattle);
-  const bF = teamB.map(cloneFighterForBattle);
+  const preparedA = prepareTeamLoadouts(teamA, teamB);
+  const preparedB = prepareTeamLoadouts(teamB, teamA);
+  const aF = preparedA.map(cloneFighterForBattle);
+  const bF = preparedB.map(cloneFighterForBattle);
 
   let winsA = 0;
   let winsB = 0;
@@ -892,8 +1235,14 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
 
   for (let g = 1; g <= games; g++) {
     // Reset HP only; keep effects, cooldowns, and other state.
-    for (const f of aF) f.hp = f.maxHP;
-    for (const f of bF) f.hp = f.maxHP;
+    for (const f of aF) {
+      f.hp = f.maxHP;
+      f.usedCharges = {};
+    }
+    for (const f of bF) {
+      f.hp = f.maxHP;
+      f.usedCharges = {};
+    }
 
     const { winner, log } = runBattleOnExistingFighters(aF, bF);
 
@@ -911,5 +1260,18 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
     winner: seriesWinner, // "A", "B", or "DRAW" (for even number of games)
     log: seriesLogs.join("\n\n")
   };
+}
+
+const battleAPI = {
+  simulateTeamBattle,
+  simulateTeamSeries
+};
+
+export default battleAPI;
+
+// Provide CommonJS compatibility so Node-based tooling (tests, scripts)
+// can continue using require(...) without needing transpilation.
+if (typeof module !== "undefined") {
+  module.exports = battleAPI;
 }
 
