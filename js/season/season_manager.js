@@ -41,16 +41,46 @@ function generateRoundRobinSchedule(teamCount) {
   return rounds;
 }
 
+function compareTeamsByStandings(a, b) {
+  if ((b.points || 0) !== (a.points || 0)) {
+    return (b.points || 0) - (a.points || 0);
+  }
+  if ((b.wins || 0) !== (a.wins || 0)) {
+    return (b.wins || 0) - (a.wins || 0);
+  }
+  return (a.name || "").localeCompare(b.name || "");
+}
+
 /**
  * Build initial Cup pairs as [teamIndexA, teamIndexB].
- * For now we just pair (0 vs 1), (2 vs 3), (4 vs 5), (6 vs 7).
+ * Teams are seeded by league standings: best vs worst, next-best vs next-worst, etc.
+ * If there is an odd number of teams, the lowest seed gets a bye (paired with null).
  */
 function initialCupPairs() {
-  const idxs = GAME.teams.map((_, i) => i);
+  const rankedTeams = GAME.teams
+    .map((team, idx) => ({ ...team, idx }))
+    .sort(compareTeamsByStandings);
+
   const pairs = [];
-  for (let i = 0; i < idxs.length; i += 2) {
-    pairs.push([idxs[i], idxs[i + 1]]);
+  let left = 0;
+  let right = rankedTeams.length - 1;
+
+  while (left <= right) {
+    const a = rankedTeams[left]?.idx ?? null;
+    const b = rankedTeams[right]?.idx ?? null;
+
+    if (a == null && b == null) break;
+
+    if (a == null || b == null) {
+      pairs.push([a ?? b, null]);
+    } else {
+      pairs.push([a, b]);
+    }
+
+    left++;
+    right--;
   }
+
   return pairs;
 }
 
@@ -167,17 +197,29 @@ function simulateCupRound() {
 
   const winners = [];
   for (const [aIdx, bIdx] of GAME.cup.matches) {
-    const teamA = GAME.teams[aIdx];
-    const teamB = GAME.teams[bIdx];
+    const teamA = aIdx != null ? GAME.teams[aIdx] : null;
+    const teamB = bIdx != null ? GAME.teams[bIdx] : null;
+
+    // Handle byes if one slot is empty
+    if (teamA == null || teamB == null) {
+      const advIdx = aIdx ?? bIdx;
+      const advTeam = GAME.teams[advIdx];
+      winners.push(advIdx);
+
+      const summary = `${advTeam?.name || "TBD"} advances by bye`;
+      log += `  ${summary}\n`;
+      matches.push({ summary, log: "" });
+      continue;
+    }
 
     const fightersA = buildTeamFighters(aIdx);
-	const fightersB = buildTeamFighters(bIdx);
+    const fightersB = buildTeamFighters(bIdx);
 
-	// Best-of-3 series for Cup rounds.
-	const result = simulateTeamSeries(fightersA, fightersB, 3);
-	const winnerFlag = result.winner; // "A" or "B" (cannot be "DRAW" with 3 games)
-	let winnerIdx = null;
-	let loserIdx = null;
+    // Best-of-3 series for Cup rounds.
+    const result = simulateTeamSeries(fightersA, fightersB, 3);
+    const winnerFlag = result.winner; // "A" or "B" (cannot be "DRAW" with 3 games)
+    let winnerIdx = null;
+    let loserIdx = null;
 
     if (winnerFlag === "A") {
       winnerIdx = aIdx;
@@ -246,11 +288,13 @@ function simulateCupRound() {
       played: false
     };
   } else {
-    // Build next round matches from winners
+    // Build next round matches from winners, allowing byes if needed
     const nextPairs = [];
     for (let i = 0; i < winners.length; i += 2) {
-      if (i + 1 < winners.length) {
-        nextPairs.push([winners[i], winners[i + 1]]);
+      const a = winners[i] ?? null;
+      const b = winners[i + 1] ?? null;
+      if (a != null || b != null) {
+        nextPairs.push([a, b]);
       }
     }
     GAME.cup.matches = nextPairs;
