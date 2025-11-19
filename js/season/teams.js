@@ -8,42 +8,42 @@ const BASE_TEAMS = [
   {
     id: "babylon_knights",
     name: "Babylon Knights",
-    fighterIds: ["bailey", "peanut", "fox"],
+    fighterIds: ["bailey", "keene", "sabrina"],
   },
   {
     id: "k9pd",
     name: "K9PD",
-    fighterIds: ["ralph", "sasha", "terrace"],
-  },
-  {
-    id: "keene_enterprises",
-    name: "Keene Enterprises",
-    fighterIds: ["kevin", "tarot", "terrace"],
-  },
-  {
-    id: "milton_estate",
-    name: "Milton Estate",
-    fighterIds: ["king", "breel", "lana"],
-  },
-  {
-    id: "odd_company",
-    name: "Odd Company",
-    fighterIds: ["mungo", "marvin", "maxwell"],
+    fighterIds: ["fido", "grape", "sasha"],
   },
   {
     id: "pridelands_warriors",
     name: "Pridelands Warriors",
-    fighterIds: ["tiger", "grape", "natalie"],
+    fighterIds: ["kevin", "maxwell", "peanut"],
   },
   {
-    id: "team_sibling_rivalry",
-    name: "Team Sibling Rivalry",
-    fighterIds: ["fido", "joey", "bino"],
+    id: "milton_estate",
+    name: "Milton Estate",
+    fighterIds: ["king", "breel", "bino"],
+  },
+  {
+    id: "odd_company",
+    name: "Odd Company",
+    fighterIds: ["tiger", "lucretia", "marvin"],
+  },
+  {
+    id: "chaotic_enterprises",
+    name: "Chaotic Enterprises",
+    fighterIds: ["mungo", "terrace", "natalie"],
+  },
+  {
+    id: "speedsters_casters",
+    name: "Speedsters & Casters",
+    fighterIds: ["fox", "joey", "lana"],
   },
   {
     id: "temple_crashers",
     name: "Temple Crashers",
-    fighterIds: ["lucretia", "sabrina", "karishad"],
+    fighterIds: ["tarot", "karishad", "ralph"],
   },
 ];
 
