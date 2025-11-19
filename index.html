@@ -116,6 +116,25 @@
       margin-bottom: 0.3rem;
     }
 
+    #season-meta-banner {
+      background: linear-gradient(90deg, rgba(58, 123, 213, 0.15), rgba(0, 0, 0, 0));
+      border: 1px solid #2f4f7d;
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      margin: 0.5rem 0 1rem;
+    }
+
+    #season-meta-banner .meta-title {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.2rem;
+    }
+
+    #season-meta-banner .meta-desc {
+      color: #cbd6f4;
+      font-size: 0.9rem;
+    }
+
     .match-log {
       margin-top: 0.3rem;
       background: #000;
@@ -171,11 +190,13 @@
 	</div>
 
   
-    <div id="top-bar">
+  <div id="top-bar">
     <div id="day-label">Day 1</div>
     <button id="start-season-btn" disabled>Start New Season</button>
     <button id="next-day-btn" disabled>Next Day</button>
   </div>
+
+  <div id="season-meta-banner" aria-live="polite"></div>
 
   <div id="layout">
     <div>

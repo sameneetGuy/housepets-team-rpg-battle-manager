@@ -2,6 +2,7 @@
 
 import { GAME } from "../core/state.js";
 import { ensureInitialTeams, resetTeamsForNewSeason } from "./teams.js";
+import { rollSeasonMetaTrend, setSeasonMetaTrend } from "./meta_trends.js";
 import { simulateTeamBattle, simulateTeamSeries } from "../battle/battle_3v3.js";
 
 /**
@@ -405,6 +406,13 @@ function getLeagueRunnerUpIndex() {
  * Keeps teams and fighter title history; resets league/cup/supercup state.
  */
 export function startNewSeason() {
+  // Increment season number before applying meta so history records correctly.
+  if (GAME._seasonStartedBefore) {
+    GAME.seasonNumber = (GAME.seasonNumber || 1) + 1;
+  } else {
+    GAME.seasonNumber = GAME.seasonNumber || 1;
+  }
+
   resetTeamsForNewSeason();
 
   GAME.league.schedule = generateRoundRobinSchedule(GAME.teams.length);
@@ -423,11 +431,9 @@ export function startNewSeason() {
   GAME.dayNumber = 1;
   GAME.seasonComplete = false;
 
-  // You can choose when to increment seasonNumber; here we only increment
-  // if a previous season has already been played.
-  if (GAME._seasonStartedBefore) {
-    GAME.seasonNumber = (GAME.seasonNumber || 1) + 1;
-  }
+  // Roll a new seasonal meta trend and record it for history/AI use.
+  setSeasonMetaTrend(rollSeasonMetaTrend());
+
   GAME._seasonStartedBefore = true;
 }
 

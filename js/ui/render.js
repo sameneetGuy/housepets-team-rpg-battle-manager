@@ -11,6 +11,7 @@ export function renderAll() {
   renderCup();
   renderCalendar();
   renderDayLabel();
+  renderSeasonMeta();
 }
 
 function renderDayLabel() {
@@ -18,6 +19,24 @@ function renderDayLabel() {
   if (!el) return;
   const day = GAME.dayNumber || 1;
   el.textContent = `Day ${day}`;
+}
+
+function renderSeasonMeta() {
+  const el = document.getElementById("season-meta-banner");
+  if (!el) return;
+
+  const meta = GAME.metaTrend;
+
+  if (!meta) {
+    el.textContent = "Start a season to roll a new meta trend.";
+    return;
+  }
+
+  const season = GAME.seasonNumber || 1;
+  el.innerHTML = `
+    <div class="meta-title">Season ${season} Meta: ${meta.name}</div>
+    <div class="meta-desc">${meta.description}</div>
+  `;
 }
 
 function renderParticipants() {
