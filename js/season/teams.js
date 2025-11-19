@@ -45,6 +45,29 @@ const BASE_TEAMS = [
     name: "Temple Crashers",
     fighterIds: ["tarot", "karishad", "ralph"],
   },
+
+  // ===== New Teams for 12-team League =====
+
+  {
+    id: "cosmic_weasel",
+    name: "Cosmic Weasel",
+    fighterIds: ["delusional_steve", "zach", "jessica"],
+  },
+  {
+    id: "ancient_guardians",
+    name: "Ancient Guardians",
+    fighterIds: ["ptah", "satau", "rufus"],
+  },
+  {
+    id: "forest_ferals",
+    name: "Forest & Ferals",
+    fighterIds: ["gale", "miles", "itsuki"],
+  },
+  {
+    id: "street_legends",
+    name: "Street Legends",
+    fighterIds: ["rex", "lester", "dallas"],
+  },
 ];
 
 /**
