@@ -377,6 +377,7 @@ export function startNewSeason() {
   GAME.log = "";
   GAME.calendar = [];
   GAME.dayNumber = 1;
+  GAME.seasonComplete = false;
 
   // You can choose when to increment seasonNumber; here we only increment
   // if a previous season has already been played.
@@ -395,10 +396,15 @@ export function startNewSeason() {
  * Also appends to GAME.calendar with { day, phase, shortLabel, log }.
  */
 export function advanceDay() {
+  if (GAME.seasonComplete) {
+    return { status: "finished", phase: "Off-season", shortLabel: "Season finished" };
+  }
+
   let log = "";
   let phase = "";
   let shortLabel = "";
   let matches = [];
+  let status = "league";
 
   // 1) League phase
   if (!GAME.league.finished) {
@@ -407,6 +413,7 @@ export function advanceDay() {
     const res = simulateLeagueDay();
     log = res.log;
     matches = res.matches || [];
+    status = "league";
   }
   // 2) Cup phase
   else if (!GAME.cup.finished) {
@@ -419,6 +426,7 @@ export function advanceDay() {
     const res = simulateCupRound();
     log = res.log;
     matches = res.matches || [];
+    status = "cup";
   }
   // 3) Super Cup
   else if (GAME.supercup && !GAME.supercup.played) {
@@ -427,6 +435,7 @@ export function advanceDay() {
     const res = simulateSuperCup();
     log = res.log;
     matches = res.matches || [];
+    status = "supercup";
   } else {
     phase = "Off-season";
     shortLabel = "Season finished";
@@ -437,6 +446,7 @@ export function advanceDay() {
         log
       }
     ];
+    status = "finished";
   }
 
   GAME.log = log;
@@ -448,5 +458,11 @@ export function advanceDay() {
     matches
   });
   GAME.dayNumber = (GAME.dayNumber || 1) + 1;
+
+  if (status === "finished") {
+    GAME.seasonComplete = true;
+  }
+
+  return { status, phase, shortLabel, log, matches };
 }
 

@@ -5,16 +5,22 @@ import { GAME } from "../core/state.js";
 /**
  * Wire up UI events: start season, next day, and calendar log toggling.
  */
-export function setupUIEvents({ startNewSeason, advanceDay, renderAll }) {
+export function setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl }) {
   const startBtn = document.getElementById("start-season-btn");
   const nextBtn = document.getElementById("next-day-btn");
-  const calendarEntries = document.getElementById("calendar-entries");
   const dayLabel = document.getElementById("day-label");
+
+  const setStatus = (text) => {
+    if (statusEl) {
+      statusEl.textContent = text || "";
+    }
+  };
 
   if (startBtn) {
     startBtn.addEventListener("click", () => {
       startNewSeason();
       if (nextBtn) nextBtn.disabled = false;
+      setStatus("");
       updateDayLabel(dayLabel);
       renderAll();
     });
@@ -22,9 +28,13 @@ export function setupUIEvents({ startNewSeason, advanceDay, renderAll }) {
 
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
-      advanceDay();
+      const result = advanceDay();
       updateDayLabel(dayLabel);
       renderAll();
+      if (result && result.status === "finished") {
+        nextBtn.disabled = true;
+        setStatus("Season finished. Start a new season to continue.");
+      }
     });
   }
 

@@ -27,33 +27,61 @@ function rollD20() {
 }
 
 /**
- * Returns true if the debuff/effect should be applied to target.
- * If the ability has no "save" object, always returns true.
- * If the save succeeds and onSave === "negate", returns false.
+ * Evaluate a saving throw for the given target/ability.
+ * Returns an object describing whether the effect applies and how strongly.
  */
-function passesSavingThrow(target, ability) {
+function evaluateSavingThrow(target, ability) {
   const save = ability.save;
-  if (!save) return true; // no save for this ability
+  if (!save) {
+    return { applies: true, scale: 1, success: false };
+  }
 
-  const stat = save.stat;            // e.g. "luck", "defenseBonus", "speed"
+  const stat = save.stat;
   const dc = save.dc || 10;
   const onSave = save.onSave || "negate";
 
   const statValue = getModifiedStat(target, stat);
   const roll = rollD20() + statValue;
+  const success = roll >= dc;
 
-  // Save succeeds
-  if (roll >= dc) {
-    if (onSave === "negate") {
-      // Entire debuff is resisted
-      return false;
-    }
-    // If in the future you add "half" or "reduced", handle that here.
-    return true;
+  if (!success) {
+    return { applies: true, scale: 1, success: false };
   }
 
-  // Save failed: effect applies
-  return true;
+  if (onSave === "negate") {
+    return { applies: false, scale: 0, success: true, outcome: "negate" };
+  }
+
+  if (onSave === "reduced" || onSave === "half") {
+    return { applies: true, scale: 0.5, success: true, outcome: onSave };
+  }
+
+  return { applies: true, scale: 1, success: true, outcome: onSave };
+}
+
+function scaleEffectForSave(stats, duration, scale) {
+  if (scale == null || scale === 1) {
+    return { scaledStats: { ...stats }, scaledDuration: duration };
+  }
+
+  const scaledStats = {};
+  for (const [key, value] of Object.entries(stats)) {
+    if (typeof value === "number") {
+      const raw = value * scale;
+      if (raw === 0) {
+        scaledStats[key] = 0;
+      } else if (raw > 0) {
+        scaledStats[key] = Math.max(0, Math.floor(raw));
+      } else {
+        scaledStats[key] = Math.min(0, Math.ceil(raw));
+      }
+    } else {
+      scaledStats[key] = value;
+    }
+  }
+
+  const scaledDuration = Math.max(1, Math.floor(duration * scale));
+  return { scaledStats, scaledDuration };
 }
 
 function rollDiceExpression(expr) {
@@ -142,17 +170,26 @@ function hasEffectObject(ability) {
 // concentration: ability.concentration === true
 // rule: each TARGET can only have ONE concentration buff at a time.
 // New concentration effect replaces previous concentration effect on that target.
-function applyBuffOrDebuff(source, targets, ability) {
+function applyBuffOrDebuff(source, targets, ability, options = {}) {
   if (!hasEffectObject(ability)) return;
 
   const stats = ability.effect;
   const dur = ability.duration > 0 ? ability.duration : 1;
   const isConcentration = !!ability.concentration;
+  const appliedTargets = [];
+  const saveResultsMap = options.saveResults instanceof Map ? options.saveResults : null;
 
   for (const t of targets) {
     // Saving throw hook: if this ability has a save, check per target
-    if (ability.save && !passesSavingThrow(t, ability)) {
-      continue; // target resisted the effect
+    let saveResult = null;
+    if (saveResultsMap && saveResultsMap.has(t)) {
+      saveResult = saveResultsMap.get(t);
+    } else if (ability.save) {
+      saveResult = evaluateSavingThrow(t, ability);
+    }
+
+    if (saveResult && !saveResult.applies) {
+      continue; // target resisted the effect entirely
     }
 
     if (!t.effects) t.effects = [];
@@ -161,14 +198,33 @@ function applyBuffOrDebuff(source, targets, ability) {
       t.effects = t.effects.filter(e => !e.isConcentration);
     }
 
+    let effectStats = { ...stats };
+    let effectDuration = dur;
+    if (saveResult && saveResult.scale != null && saveResult.scale !== 1) {
+      const scaled = scaleEffectForSave(stats, dur, saveResult.scale);
+      effectStats = scaled.scaledStats;
+      effectDuration = scaled.scaledDuration;
+    }
+
+    const hasImpact = Object.values(effectStats).some(val => {
+      if (typeof val === "number") return val !== 0;
+      return val !== undefined && val !== null;
+    });
+    if (!hasImpact) {
+      continue;
+    }
+
     t.effects.push({
-      stats: { ...stats },
-      remainingRounds: dur,
+      stats: effectStats,
+      remainingRounds: effectDuration,
       source: source.name,
       abilityName: ability.name,
       isConcentration
     });
+    appliedTargets.push(t);
   }
+
+  return appliedTargets;
 }
 
 function consumeSpecialFlag(f, flagName) {
@@ -645,17 +701,38 @@ function performAction(attacker, allies, enemies, round, logLines) {
         continue;
       }
 
-      const { dmg, isCrit } = computeDamage(attacker, target, ability);
-	  const oldHP = target.hp;
-	  target.hp = Math.max(0, target.hp - dmg);
+      const saveResult = ability.save ? evaluateSavingThrow(target, ability) : null;
+      if (saveResult && !saveResult.applies) {
+        logLines.push(
+          `${attacker.name} uses ${ability.name} on ${target.name}, but they resist the effect.`
+        );
+        continue;
+      }
 
-	  const critText = isCrit ? " (CRIT!)" : "";
-	  logLines.push(
-	    `${attacker.name} hits ${target.name} with ${ability.name}${critText} for ${dmg} (${oldHP} → ${target.hp}).`
-	  );
+      let { dmg, isCrit } = computeDamage(attacker, target, ability);
+      if (saveResult && saveResult.scale != null && saveResult.scale !== 1) {
+        dmg = Math.max(0, Math.floor(dmg * saveResult.scale));
+      }
+
+      if (dmg <= 0) {
+        logLines.push(
+          `${attacker.name} hits ${target.name} with ${ability.name}, but it deals no damage.`
+        );
+        continue;
+      }
+
+      const oldHP = target.hp;
+      target.hp = Math.max(0, target.hp - dmg);
+
+      const critText = isCrit ? " (CRIT!)" : "";
+      const mitigationText = saveResult && saveResult.success && saveResult.scale < 1 ? " (reduced)" : "";
+      logLines.push(
+        `${attacker.name} hits ${target.name} with ${ability.name}${critText} for ${dmg}${mitigationText} (${oldHP} → ${target.hp}).`
+      );
 
       // If this damaging ability also has an effect (e.g. Hex), apply it (with save inside).
-      if (hasBuff) applyBuffOrDebuff(attacker, [target], ability);
+      const saveResults = saveResult ? new Map([[target, saveResult]]) : null;
+      if (hasBuff) applyBuffOrDebuff(attacker, [target], ability, { saveResults });
 
       if (ability.extraEffect) applyExtraEffects(attacker, allies, enemies, target, ability);
 
@@ -688,9 +765,13 @@ function performAction(attacker, allies, enemies, round, logLines) {
 
   // Pure buff / utility (includes debuffs like Dark Mist, Taunting Bark, etc.)
   if (hasBuff) {
-    applyBuffOrDebuff(attacker, targets, ability);
-    const names = targets.map(t => t.name).join(", ");
-    logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
+    const affected = applyBuffOrDebuff(attacker, targets, ability);
+    if (affected && affected.length > 0) {
+      const names = affected.map(t => t.name).join(", ");
+      logLines.push(`${attacker.name} uses ${ability.name} on ${names}.`);
+    } else {
+      logLines.push(`${attacker.name} uses ${ability.name}, but it has no effect.`);
+    }
     return;
   }
 

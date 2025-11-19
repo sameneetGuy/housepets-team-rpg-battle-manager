@@ -30,6 +30,7 @@ export const GAME = {
 
   // Season tracking
   seasonNumber: 1,
+  seasonComplete: false,
 
   // Global day count (for calendar)
   dayNumber: 1,
