@@ -485,7 +485,13 @@ export function advanceDay() {
     const res = simulateSuperCup();
     log = res.log;
     matches = res.matches || [];
-    status = "supercup";
+    // Treat the season as finished immediately after the Super Cup so the UI
+    // doesn't require an extra "off-season" click.
+    const finishSummary = "Season finished. Start a new season to continue.";
+    matches.push({ summary: finishSummary, log: res.log });
+    log = `${log}\n${finishSummary}\n`;
+    status = "finished";
+    GAME.seasonComplete = true;
   } else {
     phase = "Off-season";
     shortLabel = "Season finished";
