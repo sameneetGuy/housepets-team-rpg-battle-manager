@@ -10,9 +10,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const statusEl = document.getElementById("app-status");
   const startBtn = document.getElementById("start-season-btn");
   const nextBtn = document.getElementById("next-day-btn");
+  const simulateBtn = document.getElementById("simulate-50-btn");
 
   if (startBtn) startBtn.disabled = true;
   if (nextBtn) nextBtn.disabled = true;
+  if (simulateBtn) simulateBtn.disabled = true;
   if (statusEl) statusEl.textContent = "Loading fighters…";
 
   try {
@@ -31,5 +33,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl });
 
   if (startBtn) startBtn.disabled = false;
+  if (simulateBtn) simulateBtn.disabled = false;
   if (statusEl) statusEl.textContent = "";
 });
