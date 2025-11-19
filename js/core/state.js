@@ -7,7 +7,7 @@ export const GAME = {
   // Stable order of fighter ids (useful for tables / loops)
   fighterOrder: [],
 
-  // Teams participating in the league (8 teams, 2 fighters each)
+  // Teams participating in the league (8 teams, 3 fighters each)
   teams: [],
 
   // League (round robin)
