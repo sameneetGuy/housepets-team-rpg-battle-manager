@@ -416,6 +416,34 @@ function spendConditionTurn(fighter, condName) {
   return spent;
 }
 
+function ensureConditionState(fighter) {
+  if (!fighter.conditions) fighter.conditions = [];
+}
+
+function addConditionToFighter(fighter, condName, duration) {
+  ensureConditionState(fighter);
+  const extraDuration = Math.max(1, duration + 1);
+  const existing = fighter.conditions.find(c => c.name === condName);
+  if (existing) {
+    existing.remainingRounds = Math.max(existing.remainingRounds, extraDuration);
+  } else {
+    fighter.conditions.push({ name: condName, remainingRounds: extraDuration });
+  }
+}
+
+function spendConditionTurn(fighter, condName) {
+  if (!fighter.conditions || fighter.conditions.length === 0) return false;
+  let spent = false;
+  fighter.conditions = fighter.conditions.filter(cond => {
+    if (cond.name !== condName) return cond.remainingRounds > 0;
+    if (cond.remainingRounds <= 0) return false;
+    cond.remainingRounds -= 1;
+    spent = true;
+    return cond.remainingRounds > 0;
+  });
+  return spent;
+}
+
 // ---------- Ability Type Helpers ----------
 
 function isDamagingAbility(a) {
@@ -539,6 +567,82 @@ function adjustDamageForResistances(damage, defender, damageType) {
   }
 
   return result;
+}
+
+function scoreAbilityForLoadout(fighter, ability, opponents) {
+  let score = ability.aiWeight != null ? ability.aiWeight : 1;
+
+  if (isHealingAbility(ability)) score += 0.6;
+  if (hasEffectObject(ability) || ability.applyCondition) score += 0.15;
+  if (ability.aoe && ability.aoe !== "single") score += 0.2;
+
+  const damageType = isDamagingAbility(ability) ? getAbilityDamageType(ability) : null;
+  if (damageType) {
+    const vulnCount = opponents.filter(o => (o.vulnerabilities || []).includes(damageType)).length;
+    const resistCount = opponents.filter(o => (o.resistances || []).includes(damageType)).length;
+    score += vulnCount * 0.25;
+    score -= resistCount * 0.2;
+  }
+
+  const pinned = fighter.coreAbilities || [];
+  const recommended = fighter.activeAbilities || [];
+  if (pinned.includes(ability.id)) score += 0.4;
+  else if (recommended.includes(ability.id)) score += 0.2;
+
+  score *= 0.9 + Math.random() * 0.2;
+  return Math.max(score, 0.05);
+}
+
+function getAbilityPool(fighter) {
+  if (fighter.abilityPool && fighter.abilityPool.length > 0) return fighter.abilityPool;
+  return fighter.abilities || [];
+}
+
+function chooseLoadout(fighter, opponents) {
+  const pool = getAbilityPool(fighter);
+  const loadoutSize = fighter.loadoutSize || 4;
+  const abilityMap = new Map(pool.map(ab => [ab.id, ab]));
+  const chosen = [];
+  const chosenIds = new Set();
+
+  for (const id of fighter.coreAbilities || []) {
+    if (abilityMap.has(id)) {
+      chosen.push(abilityMap.get(id));
+      chosenIds.add(id);
+    }
+  }
+
+  const scored = pool
+    .filter(ab => !chosenIds.has(ab.id))
+    .map(ab => ({ ab, score: scoreAbilityForLoadout(fighter, ab, opponents) }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  for (const item of scored) {
+    if (chosen.length >= loadoutSize) break;
+    chosen.push(item.ab);
+    chosenIds.add(item.ab.id);
+  }
+
+  // If we still need filler (unlikely), just add the remaining highest AI weight moves.
+  if (chosen.length < loadoutSize) {
+    const leftovers = pool
+      .filter(ab => !chosenIds.has(ab.id))
+      .sort((a, b) => (b.aiWeight || 1) - (a.aiWeight || 1));
+    for (const ab of leftovers) {
+      if (chosen.length >= loadoutSize) break;
+      chosen.push(ab);
+    }
+  }
+
+  return chosen.slice(0, loadoutSize);
+}
+
+function prepareTeamLoadouts(team, opponents) {
+  return team.map(f => ({
+    ...f,
+    abilities: chooseLoadout(f, opponents)
+  }));
 }
 
 function computeDamage(attacker, defender, ability) {
@@ -1139,15 +1243,19 @@ function runBattleOnExistingFighters(aF, bF) {
 
 // Single-battle entrypoint (used for places that still want BO1, like Super Cup)
 export function simulateTeamBattle(teamA, teamB) {
-  const aF = teamA.map(cloneFighterForBattle);
-  const bF = teamB.map(cloneFighterForBattle);
+  const preparedA = prepareTeamLoadouts(teamA, teamB);
+  const preparedB = prepareTeamLoadouts(teamB, teamA);
+  const aF = preparedA.map(cloneFighterForBattle);
+  const bF = preparedB.map(cloneFighterForBattle);
   return runBattleOnExistingFighters(aF, bF);
 }
 
 // Multi-game series: HP resets between games, but effects/cooldowns/flags persist.
 export function simulateTeamSeries(teamA, teamB, games = 2) {
-  const aF = teamA.map(cloneFighterForBattle);
-  const bF = teamB.map(cloneFighterForBattle);
+  const preparedA = prepareTeamLoadouts(teamA, teamB);
+  const preparedB = prepareTeamLoadouts(teamB, teamA);
+  const aF = preparedA.map(cloneFighterForBattle);
+  const bF = preparedB.map(cloneFighterForBattle);
 
   let winsA = 0;
   let winsB = 0;
@@ -1180,6 +1288,19 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
     winner: seriesWinner, // "A", "B", or "DRAW" (for even number of games)
     log: seriesLogs.join("\n\n")
   };
+}
+
+const battleAPI = {
+  simulateTeamBattle,
+  simulateTeamSeries
+};
+
+export default battleAPI;
+
+// Provide CommonJS compatibility so Node-based tooling (tests, scripts)
+// can continue using require(...) without needing transpilation.
+if (typeof module !== "undefined") {
+  module.exports = battleAPI;
 }
 
 const battleAPI = {
