@@ -80,25 +80,28 @@ function buildPlayoffPairs() {
  * If there is an odd number of teams, the lowest seed gets a bye (paired with null).
  */
 function initialCupPairs() {
-  const rankedTeams = GAME.teams
+  const rankedIndices = GAME.teams
     .map((team, idx) => ({ ...team, idx }))
-    .sort(compareTeamsByStandings);
+    .sort(compareTeamsByStandings)
+    .map((team) => team.idx);
+
+  // Pad the seeding list up to the next power of two so higher seeds receive byes.
+  const bracketSize = Math.pow(2, Math.ceil(Math.log2(Math.max(2, rankedIndices.length))));
+  while (rankedIndices.length < bracketSize) {
+    rankedIndices.push(null);
+  }
 
   const pairs = [];
   let left = 0;
-  let right = rankedTeams.length - 1;
+  let right = rankedIndices.length - 1;
 
   while (left <= right) {
-    const a = rankedTeams[left]?.idx ?? null;
-    const b = rankedTeams[right]?.idx ?? null;
+    const a = rankedIndices[left] ?? null;
+    const b = rankedIndices[right] ?? null;
 
     if (a == null && b == null) break;
 
-    if (a == null || b == null) {
-      pairs.push([a ?? b, null]);
-    } else {
-      pairs.push([a, b]);
-    }
+    pairs.push([a, b]);
 
     left++;
     right--;
@@ -187,6 +190,17 @@ function simulateLeagueDay() {
   }
 
   return { log, matches };
+}
+
+export function getCupStageName(matches) {
+  const slots = Array.isArray(matches) ? matches.length * 2 : 0;
+
+  if (slots <= 2) return "Final";
+  if (slots <= 4) return "Semifinals";
+  if (slots <= 8) return "Quarterfinals";
+  if (slots > 0) return `Round of ${slots}`;
+
+  return "Cup Round";
 }
 
 /**
@@ -302,10 +316,9 @@ function simulatePlayoffRound() {
 function simulateCupRound() {
   let log = "";
   const matches = [];
-  const roundIdx = GAME.cup.round; // 0 = QF, 1 = SF, 2 = Final
 
-  const stageNames = ["Quarterfinals", "Semifinals", "Final"];
-  log += `Cup ${stageNames[roundIdx]}\n`;
+  const stageName = getCupStageName(GAME.cup.matches);
+  log += `Cup ${stageName}\n`;
 
   const winners = [];
   for (const [aIdx, bIdx] of GAME.cup.matches) {
@@ -364,11 +377,13 @@ function simulateCupRound() {
 
   GAME.cup.round++;
 
-  if (GAME.cup.round >= 3) {
-    // Final just played
+  const realWinners = winners.filter((idx) => idx != null);
+
+  if (realWinners.length <= 1) {
+    // Cup champion decided
     GAME.cup.finished = true;
 
-    const cupWinnerIdx = winners.find((idx) => idx != null) ?? null;
+    const cupWinnerIdx = realWinners[0] ?? null;
     GAME.cup.winnerTeamIndex = cupWinnerIdx;
     GAME.cup.matches = [];
 
@@ -610,9 +625,8 @@ export function advanceDay() {
     if (GAME.cup.round === 0 && GAME.cup.matches.length === 0) {
       GAME.cup.matches = initialCupPairs();
     }
-    const roundNames = ["Quarterfinals", "Semifinals", "Final"];
     phase = "Cup";
-    shortLabel = roundNames[GAME.cup.round] || "Cup Round";
+    shortLabel = getCupStageName(GAME.cup.matches);
     const res = simulateCupRound();
     log = res.log;
     matches = res.matches || [];

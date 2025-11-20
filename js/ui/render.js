@@ -2,7 +2,10 @@
 
 import { GAME } from "../core/state.js";
 import { getConferenceStandings } from "../season/teams.js";
-import { getLeagueChampionIndex } from "../season/season_manager.js";
+import {
+  getCupStageName,
+  getLeagueChampionIndex
+} from "../season/season_manager.js";
 
 export function renderAll() {
   renderParticipants();
@@ -223,8 +226,7 @@ function renderCup() {
       parts.push("Cup finished.");
     }
   } else {
-    const roundNames = ["Quarterfinals", "Semifinals", "Final"];
-    const roundName = roundNames[cup.round] || "Cup Round";
+    const roundName = getCupStageName(cup.matches);
     parts.push(`<div>Current Round: ${roundName}</div>`);
     if (Array.isArray(cup.matches) && cup.matches.length > 0) {
       const li = cup.matches
