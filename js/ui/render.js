@@ -118,15 +118,11 @@ function renderLeague() {
   if (!statusDiv || !eastBody || !westBody) return;
 
   const league = GAME.league;
+  const hasSchedule = Array.isArray(league.schedule) && league.schedule.length > 0;
 
-  if (!league.schedule || league.schedule.length === 0) {
+  if (!hasSchedule) {
     statusDiv.textContent = "League not started.";
-    eastBody.innerHTML = "";
-    westBody.innerHTML = "";
-    return;
-  }
-
-  if (!league.finished) {
+  } else if (!league.finished) {
     statusDiv.textContent = `Round ${league.day + 1} of ${league.schedule.length}`;
   } else {
     const champIdx = getLeagueChampionIndex();
