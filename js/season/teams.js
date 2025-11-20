@@ -2,48 +2,68 @@
 
 import { GAME } from "../core/state.js";
 
-// Base team definitions: 8 teams, 3 fighters each, built around formation
+export const CONFERENCES = ["Eastern Conference", "Western Conference"];
+
+export function compareTeamsByStandings(a, b) {
+  if ((b.points || 0) !== (a.points || 0)) {
+    return (b.points || 0) - (a.points || 0);
+  }
+  if ((b.wins || 0) !== (a.wins || 0)) {
+    return (b.wins || 0) - (a.wins || 0);
+  }
+  return (a.name || "").localeCompare(b.name || "");
+}
+
+// Base team definitions: 12 teams, 3 fighters each, built around formation
 // (frontliner + mid dps/trickster + backline mage/support where possible)
 const BASE_TEAMS = [
   {
     id: "babylon_knights",
     name: "Babylon Knights",
     fighterIds: ["bailey", "keene", "sabrina"],
+    conference: "Eastern Conference",
   },
   {
     id: "k9pd",
     name: "K9PD",
     fighterIds: ["fido", "grape", "sasha"],
+    conference: "Eastern Conference",
   },
   {
     id: "pridelands_warriors",
     name: "Pridelands Warriors",
     fighterIds: ["kevin", "maxwell", "peanut"],
+    conference: "Eastern Conference",
   },
   {
     id: "milton_estate",
     name: "Milton Estate",
     fighterIds: ["king", "breel", "bino"],
+    conference: "Eastern Conference",
   },
   {
     id: "odd_company",
     name: "Odd Company",
     fighterIds: ["tiger", "lucretia", "marvin"],
+    conference: "Eastern Conference",
   },
   {
     id: "chaotic_enterprises",
     name: "Chaotic Enterprises",
     fighterIds: ["mungo", "terrace", "natalie"],
+    conference: "Eastern Conference",
   },
   {
     id: "speedsters_casters",
     name: "Speedsters & Casters",
     fighterIds: ["fox", "joey", "lana"],
+    conference: "Western Conference",
   },
   {
     id: "temple_crashers",
     name: "Temple Crashers",
     fighterIds: ["tarot", "karishad", "ralph"],
+    conference: "Western Conference",
   },
 
   // ===== New Teams for 12-team League =====
@@ -52,21 +72,25 @@ const BASE_TEAMS = [
     id: "cosmic_weasel",
     name: "Cosmic Weasel",
     fighterIds: ["delusional_steve", "zach", "jessica"],
+    conference: "Western Conference",
   },
   {
     id: "ancient_guardians",
     name: "Ancient Guardians",
     fighterIds: ["ptah", "satau", "rufus"],
+    conference: "Western Conference",
   },
   {
     id: "forest_ferals",
     name: "Forest & Ferals",
     fighterIds: ["gale", "miles", "itsuki"],
+    conference: "Western Conference",
   },
   {
     id: "street_legends",
     name: "Street Legends",
     fighterIds: ["rex", "lester", "dallas"],
+    conference: "Western Conference",
   },
 ];
 
@@ -80,6 +104,7 @@ export function ensureInitialTeams() {
     id: t.id,
     name: t.name,
     fighterIds: [...t.fighterIds],
+    conference: t.conference,
 
     // Per-season league stats
     points: 0,
@@ -120,16 +145,15 @@ export function getLeagueStandings() {
   ensureInitialTeams();
 
   const teams = GAME.teams || [];
+  return teams.slice().sort(compareTeamsByStandings);
+}
+
+export function getConferenceStandings(conferenceName) {
+  ensureInitialTeams();
+
+  const teams = GAME.teams || [];
   return teams
-    .slice()
-    .sort((a, b) => {
-      if ((b.points || 0) !== (a.points || 0)) {
-        return (b.points || 0) - (a.points || 0);
-      }
-      if ((b.wins || 0) !== (a.wins || 0)) {
-        return (b.wins || 0) - (a.wins || 0);
-      }
-      // As a final tiebreaker, sort alphabetically
-      return (a.name || "").localeCompare(b.name || "");
-    });
+    .map((team, idx) => ({ ...team, idx }))
+    .filter((team) => team.conference === conferenceName)
+    .sort((a, b) => compareTeamsByStandings(a, b));
 }

@@ -1,7 +1,11 @@
 // js/season/season_manager.js
 
 import { GAME } from "../core/state.js";
-import { ensureInitialTeams, resetTeamsForNewSeason } from "./teams.js";
+import {
+  compareTeamsByStandings,
+  ensureInitialTeams,
+  resetTeamsForNewSeason
+} from "./teams.js";
 import { rollSeasonMetaTrend, setSeasonMetaTrend } from "./meta_trends.js";
 import { simulateTeamBattle, simulateTeamSeries } from "../battle/battle_3v3.js";
 
@@ -42,14 +46,32 @@ function generateRoundRobinSchedule(teamCount) {
   return rounds;
 }
 
-function compareTeamsByStandings(a, b) {
-  if ((b.points || 0) !== (a.points || 0)) {
-    return (b.points || 0) - (a.points || 0);
-  }
-  if ((b.wins || 0) !== (a.wins || 0)) {
-    return (b.wins || 0) - (a.wins || 0);
-  }
-  return (a.name || "").localeCompare(b.name || "");
+function conferenceSeeds(conferenceName) {
+  return GAME.teams
+    .map((team, idx) => ({ ...team, idx }))
+    .filter((team) => team.conference === conferenceName)
+    .sort(compareTeamsByStandings)
+    .slice(0, 4);
+}
+
+/**
+ * Build initial Playoff pairs as [teamIndexA, teamIndexB].
+ * Top 4 of each conference qualify. Bracket: 1E v 4W, 2E v 3W, 1W v 4E, 2W v 3E.
+ */
+function buildPlayoffPairs() {
+  const east = conferenceSeeds("Eastern Conference");
+  const west = conferenceSeeds("Western Conference");
+
+  const seedIdx = (arr, seed) => arr[seed]?.idx ?? null;
+
+  const pairs = [
+    [seedIdx(east, 0), seedIdx(west, 3)],
+    [seedIdx(east, 1), seedIdx(west, 2)],
+    [seedIdx(west, 0), seedIdx(east, 3)],
+    [seedIdx(west, 1), seedIdx(east, 2)]
+  ];
+
+  return pairs.filter(([a, b]) => a != null || b != null);
 }
 
 /**
@@ -162,23 +184,112 @@ function simulateLeagueDay() {
 
   if (GAME.league.day >= GAME.league.schedule.length) {
     GAME.league.finished = true;
+  }
 
-    const champIdx = getLeagueChampionIndex();
-    GAME.league.championIndex = champIdx;
+  return { log, matches };
+}
 
-    const champTeam = GAME.teams[champIdx];
-    if (champTeam) {
-      // Team-wide league title
-      champTeam.leagueTitles = (champTeam.leagueTitles || 0) + 1;
+/**
+ * Simulate one Playoff round (QF, SF, Final).
+ * Returns a text log.
+ */
+function simulatePlayoffRound() {
+  let log = "";
+  const matches = [];
+  const roundIdx = GAME.playoffs.round; // 0 = QF, 1 = SF, 2 = Final
 
-      // Fighter league titles
-      for (const fid of champTeam.fighterIds) {
-        if (GAME.fighters[fid]) {
-          GAME.fighters[fid].leagueTitles =
-            (GAME.fighters[fid].leagueTitles || 0) + 1;
+  const stageNames = ["Quarterfinals", "Semifinals", "Final"];
+  log += `Playoffs ${stageNames[roundIdx]}\n`;
+
+  const winners = [];
+  for (const [aIdx, bIdx] of GAME.playoffs.matches) {
+    const teamA = aIdx != null ? GAME.teams[aIdx] : null;
+    const teamB = bIdx != null ? GAME.teams[bIdx] : null;
+
+    // Handle byes if one slot is empty
+    if (teamA == null || teamB == null) {
+      const advIdx = aIdx ?? bIdx;
+      const advTeam = GAME.teams[advIdx];
+      winners.push(advIdx);
+
+      const summary = `${advTeam?.name || "TBD"} advances by bye`;
+      log += `  ${summary}\n`;
+      matches.push({ summary, log: "" });
+      continue;
+    }
+
+    const fightersA = buildTeamFighters(aIdx);
+    const fightersB = buildTeamFighters(bIdx);
+
+    // Best-of-3 series for Playoff rounds.
+    const result = simulateTeamSeries(fightersA, fightersB, 3);
+    const winnerFlag = result.winner; // "A" or "B" (cannot be "DRAW" with 3 games)
+    let winnerIdx = null;
+    let loserIdx = null;
+
+    if (winnerFlag === "A") {
+      winnerIdx = aIdx;
+      loserIdx = bIdx;
+    } else if (winnerFlag === "B") {
+      winnerIdx = bIdx;
+      loserIdx = aIdx;
+    }
+
+    if (winnerIdx == null) {
+      // Safety: if somehow no winner, pick team A
+      winnerIdx = aIdx;
+      loserIdx = bIdx;
+    }
+
+    const wTeam = GAME.teams[winnerIdx];
+    const lTeam = GAME.teams[loserIdx];
+
+    winners.push(winnerIdx);
+
+    const summary = `${teamA.name} vs ${teamB.name} → ${wTeam.name} advances`;
+    log += `  ${summary}\n`;
+    log += result.log + "\n";
+
+    matches.push({
+      summary,
+      log: result.log
+    });
+  }
+
+  GAME.playoffs.round++;
+
+  if (GAME.playoffs.round >= 3) {
+    // Final just played
+    GAME.playoffs.finished = true;
+
+    const playoffWinnerIdx = winners.find((idx) => idx != null) ?? null;
+    GAME.playoffs.winnerTeamIndex = playoffWinnerIdx;
+    GAME.playoffs.matches = [];
+
+    if (playoffWinnerIdx != null) {
+      GAME.league.championIndex = playoffWinnerIdx;
+      const playoffWinnerTeam = GAME.teams[playoffWinnerIdx];
+      if (playoffWinnerTeam) {
+        playoffWinnerTeam.leagueTitles = (playoffWinnerTeam.leagueTitles || 0) + 1;
+        for (const fid of playoffWinnerTeam.fighterIds) {
+          if (GAME.fighters[fid]) {
+            GAME.fighters[fid].leagueTitles =
+              (GAME.fighters[fid].leagueTitles || 0) + 1;
+          }
         }
       }
     }
+  } else {
+    // Build next round matches from winners, allowing byes if needed
+    const nextPairs = [];
+    for (let i = 0; i < winners.length; i += 2) {
+      const a = winners[i] ?? null;
+      const b = winners[i + 1] ?? null;
+      if (a != null || b != null) {
+        nextPairs.push([a, b]);
+      }
+    }
+    GAME.playoffs.matches = nextPairs;
   }
 
   return { log, matches };
@@ -370,6 +481,9 @@ function simulateSuperCup() {
  */
 export function getLeagueChampionIndex() {
   if (!GAME.league.finished) return null;
+  if (GAME.playoffs.finished && GAME.playoffs.winnerTeamIndex != null) {
+    return GAME.playoffs.winnerTeamIndex;
+  }
 
   let bestIdx = null;
   for (let i = 0; i < GAME.teams.length; i++) {
@@ -424,6 +538,12 @@ export function startNewSeason() {
   GAME.league.schedule = generateRoundRobinSchedule(GAME.teams.length);
   GAME.league.day = 0;
   GAME.league.finished = false;
+  GAME.league.championIndex = null;
+
+  GAME.playoffs.matches = [];
+  GAME.playoffs.round = 0;
+  GAME.playoffs.finished = false;
+  GAME.playoffs.winnerTeamIndex = null;
 
   GAME.cup.matches = [];
   GAME.cup.round = 0;
@@ -446,8 +566,9 @@ export function startNewSeason() {
 /**
  * Advance to the next match day:
  *  1) Play next league round, until league finished
- *  2) Then play Cup rounds (QF → SF → Final)
- *  3) Then play Super Cup
+ *  2) Playoffs decide the league champion (QF → SF → Final)
+ *  3) Cup knockout
+ *  4) Super Cup
  *
  * Also appends to GAME.calendar with { day, phase, shortLabel, log }.
  */
@@ -471,7 +592,20 @@ export function advanceDay() {
     matches = res.matches || [];
     status = "league";
   }
-  // 2) Cup phase
+  // 2) Playoff phase
+  else if (!GAME.playoffs.finished) {
+    if (GAME.playoffs.round === 0 && GAME.playoffs.matches.length === 0) {
+      GAME.playoffs.matches = buildPlayoffPairs();
+    }
+    const roundNames = ["Quarterfinals", "Semifinals", "Final"];
+    phase = "Playoffs";
+    shortLabel = roundNames[GAME.playoffs.round] || "Playoff Round";
+    const res = simulatePlayoffRound();
+    log = res.log;
+    matches = res.matches || [];
+    status = "playoffs";
+  }
+  // 3) Cup phase
   else if (!GAME.cup.finished) {
     if (GAME.cup.round === 0 && GAME.cup.matches.length === 0) {
       GAME.cup.matches = initialCupPairs();
@@ -484,7 +618,7 @@ export function advanceDay() {
     matches = res.matches || [];
     status = "cup";
   }
-  // 3) Super Cup
+  // 4) Super Cup
   else if (GAME.supercup && !GAME.supercup.played) {
     phase = "Super Cup";
     shortLabel = "Super Cup Match";
