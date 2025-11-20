@@ -5,12 +5,15 @@ import { ensureInitialTeams } from "./season/teams.js";
 import { startNewSeason, advanceDay } from "./season/season_manager.js";
 import { renderAll } from "./ui/render.js";
 import { setupUIEvents } from "./ui/ui_events.js";
+import { setupTabs } from "./ui/tabs.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const statusEl = document.getElementById("app-status");
   const startBtn = document.getElementById("start-season-btn");
   const nextBtn = document.getElementById("next-day-btn");
   const simulateBtn = document.getElementById("simulate-50-btn");
+
+  setupTabs();
 
   if (startBtn) startBtn.disabled = true;
   if (nextBtn) nextBtn.disabled = true;
