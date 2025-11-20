@@ -6539,461 +6539,562 @@
 			}
 		]
 	},
-	"rex": {
-		"id": "rex",
-		"name": "Rex",
-		"role": "Street Bruiser",
-		"roleClass": "frontliner",
-		"position": "front",
-		"maxHP": 40,
-		"attackBonus": 4,
-		"magicBonus": 0,
-		"defenseBonus": 4,
-		"speed": 2,
-		"luck": 3,
-		"loadoutSize": 4,
-		
-		"abilities": [
-			{
-				"id": "rex_street_jab",
-				"name": "Street Jab",
-				"type": "physical",
-				"category": "light",
-				"rank": 1,
-				"aoe": "single",
-				"hitStat": "attackBonus",
-				"targeting": "front-preferred",
-				"damageByRank": ["1d6+3", "1d8+3", "2d4+3"],
-				"aiWeight": 1.1,
-				"description": "A quick tough-guy punch."
-			},
-			{
-				"id": "rex_bark_intimidation",
-				"name": "Bark Intimidation",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "enemy-team",
-				"effect": { "attackBonus": -1 },
-				"duration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 13,
-				"aiWeight": 1.2,
-				"description": "Rex barks loudly, rattling enemy morale."
-			},
-			{
-				"id": "rex_street_guard",
-				"name": "Street Guard",
-				"type": "support",
-				"category": "support",
-				"rank": 2,
-				"aoe": "self",
-				"effect": { "defenseBonus": 2 },
-				"duration": 1,
-				"cooldown": 3,
-				"aiWeight": 1.3,
-				"description": "Rex braces himself to endure incoming blows."
-			},
-			{
-				"id": "rex_brutal_slam",
-				"name": "Brutal Slam",
-				"type": "physical",
-				"category": "heavy",
-				"rank": 3,
-				"hitStat": "attackBonus",
-				"aoe": "single",
-				"targeting": "front-preferred",
-				"damageByRank": ["2d8+2", "2d10+2", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.6,
-				"description": "Rex slams the enemy with brute strength."
-			}
-		],
-		
-		"abilityPool": [
-			{
-				"id": "rex_street_jab",
-				"name": "Street Jab",
-				"type": "physical",
-				"category": "light",
-				"rank": 1,
-				"aoe": "single",
-				"hitStat": "attackBonus",
-				"targeting": "front-preferred",
-				"damageByRank": ["1d6+3", "1d8+3", "2d4+3"],
-				"aiWeight": 1.1,
-				"description": "A quick tough-guy punch."
-			},
-			{
-				"id": "rex_bark_intimidation",
-				"name": "Bark Intimidation",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "enemy-team",
-				"effect": { "attackBonus": -1 },
-				"duration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 13,
-				"aiWeight": 1.2,
-				"description": "Rex barks loudly, rattling enemy morale."
-			},
-			{
-				"id": "rex_street_guard",
-				"name": "Street Guard",
-				"type": "support",
-				"category": "support",
-				"rank": 2,
-				"aoe": "self",
-				"effect": { "defenseBonus": 2 },
-				"duration": 1,
-				"cooldown": 3,
-				"aiWeight": 1.3,
-				"description": "Rex braces himself to endure incoming blows."
-			},
-			{
-				"id": "rex_brutal_slam",
-				"name": "Brutal Slam",
-				"type": "physical",
-				"category": "heavy",
-				"rank": 3,
-				"hitStat": "attackBonus",
-				"aoe": "single",
-				"targeting": "front-preferred",
-				"damageByRank": ["2d8+2", "2d10+2", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.6,
-				"description": "Rex slams the enemy with brute strength."
-			},
-			{
-				"id": "rex_uppercut",
-				"name": "Street Uppercut",
-				"type": "physical",
-				"category": "medium",
-				"rank": 2,
-				"hitStat": "attackBonus",
-				"aoe": "single",
-				"damageByRank": ["1d10+1", "2d6+1", "2d8+1"],
-				"aiWeight": 1.3,
-				"description": "A powerful uppercut learned on the street."
-			},
-			{
-				"id": "rex_tough_hide",
-				"name": "Tough Hide",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"effect": { "defenseBonus": 1 },
-				"duration": 2,
-				"aoe": "self",
-				"aiWeight": 1.0,
-				"description": "Rex toughens himself further."
-			}
-		]
-	},
-	"lester": {
-		"id": "lester",
-		"name": "Lester",
-		"role": "Geek Mage",
-		"roleClass": "dps",
-		"position": "back",
-		"maxHP": 28,
-		"attackBonus": 0,
-		"magicBonus": 5,
-		"defenseBonus": 2,
-		"speed": 4,
-		"luck": 5,
-		"loadoutSize": 4,
-		
-		"abilities": [
-			{
-				"id": "lester_energy_bolt",
-				"name": "Energy Bolt",
-				"type": "magic",
-				"category": "light",
-				"rank": 1,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d8+1", "1d10+1", "2d6+1"],
-				"aiWeight": 1.1,
-				"description": "A classic damage spell every nerd knows."
-			},
-			{
-				"id": "lester_lore_of_heroes",
-				"name": "Lore of Heroes",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "team",
-				"effect": { "luck": 1 },
-				"duration": 2,
-				"cooldown": 2,
-				"aiWeight": 1.2,
-				"description": "Lester recalls comic wisdom, boosting morale."
-			},
-			{
-				"id": "lester_arcane_overload",
-				"name": "Arcane Overload",
-				"type": "magic",
-				"category": "medium",
-				"rank": 2,
-				"aoe": "enemy-team",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d6+2", "1d6+3", "2d4+3"],
-				"cooldown": 2,
-				"aiWeight": 1.4,
-				"description": "Heavy splash damage, somewhat unstable."
-			},
-			{
-				"id": "lester_final_panel",
-				"name": "Final Panel",
-				"type": "magic",
-				"category": "heavy",
-				"rank": 3,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"damageByRank": ["2d8+3", "2d10+3", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.7,
-				"description": "Lester reenacts a climactic comic book finisher."
-			}
-		],
-		
-		"abilityPool": [
-			{
-				"id": "lester_energy_bolt",
-				"name": "Energy Bolt",
-				"type": "magic",
-				"category": "light",
-				"rank": 1,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d8+1", "1d10+1", "2d6+1"],
-				"aiWeight": 1.1,
-				"description": "A classic damage spell every nerd knows."
-			},
-			{
-				"id": "lester_lore_of_heroes",
-				"name": "Lore of Heroes",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "team",
-				"effect": { "luck": 1 },
-				"duration": 2,
-				"cooldown": 2,
-				"aiWeight": 1.2,
-				"description": "Lester recalls comic wisdom, boosting morale."
-			},
-			{
-				"id": "lester_arcane_overload",
-				"name": "Arcane Overload",
-				"type": "magic",
-				"category": "medium",
-				"rank": 2,
-				"aoe": "enemy-team",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d6+2", "1d6+3", "2d4+3"],
-				"cooldown": 2,
-				"aiWeight": 1.4,
-				"description": "Heavy splash damage, somewhat unstable."
-			},
-			{
-				"id": "lester_final_panel",
-				"name": "Final Panel",
-				"type": "magic",
-				"category": "heavy",
-				"rank": 3,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"damageByRank": ["2d8+3", "2d10+3", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.7,
-				"description": "Lester reenacts a climactic comic book finisher."
-			},
-			{
-				"id": "lester_trivia_blast",
-				"name": "Trivia Blast",
-				"type": "magic",
-				"category": "light",
-				"rank": 1,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d6+1", "1d8+1", "2d4+1"],
-				"aiWeight": 1.0,
-				"description": "Lester fires a random obscure reference that somehow hurts."
-			},
-			{
-				"id": "lester_nerd_focus",
-				"name": "Nerd Focus",
-				"type": "support",
-				"category": "support",
-				"rank": 2,
-				"aoe": "self",
-				"effect": { "magicBonus": 1 },
-				"duration": 2,
-				"cooldown": 3,
-				"aiWeight": 1.0,
-				"description": "He channels raw geek willpower."
-			}
-		]
-	},
-	"dallas": {
-		"id": "dallas",
-		"name": "Dallas",
-		"role": "Gadget Trickster",
-		"roleClass": "dps",
-		"position": "mid",
-		"maxHP": 32,
-		"attackBonus": 2,
-		"magicBonus": 3,
-		"defenseBonus": 2,
-		"speed": 4,
-		"luck": 4,
-		"loadoutSize": 4,
-		
-		"abilities": [
-			{
-				"id": "dallas_spark_blaster",
-				"name": "Spark Blaster",
-				"type": "magic",
-				"category": "light",
-				"rank": 1,
-				"hitStat": "magicBonus",
-				"aoe": "single",
-				"damageByRank": ["1d6+2", "1d8+2", "2d4+2"],
-				"aiWeight": 1.1,
-				"description": "A little gadget that zaps the enemy."
-			},
-			{
-				"id": "dallas_tech_jam",
-				"name": "Tech Jam",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "enemy-team",
-				"effect": { "speed": -1 },
-				"duration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 13,
-				"cooldown": 2,
-				"aiWeight": 1.2,
-				"description": "Dallas disrupts enemy rhythm with unexpected gadgets."
-			},
-			{
-				"id": "dallas_overclocked_pulse",
-				"name": "Overclocked Pulse",
-				"type": "magic",
-				"category": "medium",
-				"rank": 2,
-				"aoe": "random-2-enemies",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d8+2", "2d6+2", "2d8+2"],
-				"cooldown": 2,
-				"aiWeight": 1.4,
-				"description": "A chaotic pulse of unstable energy leaps between foes."
-			},
-			{
-				"id": "dallas_big_bam",
-				"name": "Big BAM!",
-				"type": "magic",
-				"category": "heavy",
-				"rank": 3,
-				"aoe": "single",
-				"targeting": "any-enemy",
-				"hitStat": "magicBonus",
-				"damageByRank": ["2d8+3", "2d10+3", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.6,
-				"description": "Dallas detonates a dangerously improvised gadget."
-			}
-		],
-		
-		"abilityPool": [
-			{
-				"id": "dallas_spark_blaster",
-				"name": "Spark Blaster",
-				"type": "magic",
-				"category": "light",
-				"rank": 1,
-				"hitStat": "magicBonus",
-				"aoe": "single",
-				"damageByRank": ["1d6+2", "1d8+2", "2d4+2"],
-				"aiWeight": 1.1,
-				"description": "A little gadget that zaps the enemy."
-			},
-			{
-				"id": "dallas_tech_jam",
-				"name": "Tech Jam",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "enemy-team",
-				"effect": { "speed": -1 },
-				"duration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 13,
-				"cooldown": 2,
-				"aiWeight": 1.2,
-				"description": "Dallas disrupts enemy rhythm with unexpected gadgets."
-			},
-			{
-				"id": "dallas_overclocked_pulse",
-				"name": "Overclocked Pulse",
-				"type": "magic",
-				"category": "medium",
-				"rank": 2,
-				"aoe": "random-2-enemies",
-				"hitStat": "magicBonus",
-				"damageByRank": ["1d8+2", "2d6+2", "2d8+2"],
-				"cooldown": 2,
-				"aiWeight": 1.4,
-				"description": "A chaotic pulse of unstable energy leaps between foes."
-			},
-			{
-				"id": "dallas_big_bam",
-				"name": "Big BAM!",
-				"type": "magic",
-				"category": "heavy",
-				"rank": 3,
-				"aoe": "single",
-				"targeting": "any-enemy",
-				"hitStat": "magicBonus",
-				"damageByRank": ["2d8+3", "2d10+3", "3d8+3"],
-				"cooldown": 3,
-				"aiWeight": 1.6,
-				"description": "Dallas detonates a dangerously improvised gadget."
-			},
-			{
-				"id": "dallas_taser_net",
-				"name": "Taser Net",
-				"type": "magic",
-				"category": "medium",
-				"rank": 2,
-				"aoe": "single",
-				"hitStat": "magicBonus",
-				"applyCondition": "stunned",
-				"conditionDuration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 12,
-				"cooldown": 3,
-				"aiWeight": 1.3,
-				"description": "A janky tangle of wires that occasionally stuns someone."
-			},
-			{
-				"id": "dallas_distraction_pop",
-				"name": "Distraction Pop",
-				"type": "support",
-				"category": "support",
-				"rank": 1,
-				"aoe": "enemy-team",
-				"applyCondition": "disoriented",
-				"conditionDuration": 1,
-				"saveStat": "luck",
-				"saveDifficulty": 12,
-				"aiWeight": 1.0,
-				"description": "Dallas pops a noisy gadget to throw off enemy focus."
-			}
-		]
-	}
+	{
+  "rex": {
+    "id": "rex",
+    "name": "Rex",
+    "role": "Bruiser",
+    "roleClass": "frontliner",
+    "position": "front",
+    "maxHP": 40,
+    "attackBonus": 4,
+    "magicBonus": 0,
+    "defenseBonus": 3,
+    "speed": 2,
+    "luck": 2,
+    "abilities": [
+      {
+        "id": "rex_power_punch",
+        "name": "Power Punch",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "front-preferred",
+        "aiWeight": 1.3,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d8+2",
+          "2d6+2",
+          "2d8+2"
+        ],
+        "description": "Rex throws a straightforward, heavy punch backed by raw strength."
+      },
+      {
+        "id": "rex_bodyguard_instinct",
+        "name": "Bodyguard Instinct",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1.2,
+        "effect": {
+          "redirectChance": 0.4
+        },
+        "duration": 2,
+        "description": "Rex steps in front of an ally, instinctively taking blows meant for them."
+      },
+      {
+        "id": "rex_stubborn_stand",
+        "name": "Stubborn Stand",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 1,
+        "cooldown": 2,
+        "effect": {
+          "defenseBonus": 2
+        },
+        "duration": 2,
+        "description": "Rex digs in his paws and refuses to budge, hardening his defenses."
+      },
+      {
+        "id": "rex_wide_swing",
+        "name": "Wide Swing",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "enemy-team",
+        "targeting": "front-preferred",
+        "aiWeight": 1.05,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "description": "A big, clumsy swing that can catch multiple foes if they’re too close."
+      }
+    ],
+    "loadoutSize": 4,
+    "abilityPool": [
+      {
+        "id": "rex_power_punch",
+        "name": "Power Punch",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "front-preferred",
+        "aiWeight": 1.3,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d8+2",
+          "2d6+2",
+          "2d8+2"
+        ],
+        "description": "Rex throws a straightforward, heavy punch backed by raw strength."
+      },
+      {
+        "id": "rex_bodyguard_instinct",
+        "name": "Bodyguard Instinct",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1.2,
+        "effect": {
+          "redirectChance": 0.4
+        },
+        "duration": 2,
+        "description": "Rex steps in front of an ally, instinctively taking blows meant for them."
+      },
+      {
+        "id": "rex_stubborn_stand",
+        "name": "Stubborn Stand",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 1,
+        "cooldown": 2,
+        "effect": {
+          "defenseBonus": 2
+        },
+        "duration": 2,
+        "description": "Rex digs in his paws and refuses to budge, hardening his defenses."
+      },
+      {
+        "id": "rex_wide_swing",
+        "name": "Wide Swing",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "enemy-team",
+        "targeting": "front-preferred",
+        "aiWeight": 1.05,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "description": "A big, clumsy swing that can catch multiple foes if they’re too close."
+      },
+      {
+        "id": "rex_reckless_hook",
+        "name": "Reckless Hook",
+        "type": "physical",
+        "category": "heavy",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "front-preferred",
+        "aiWeight": 1.1,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "2d8+1",
+          "2d10+1",
+          "3d8+1"
+        ],
+        "extraEffect": {
+          "self": {
+            "defenseBonus": -1,
+            "duration": 1
+          }
+        },
+        "description": "Rex swings wildly for a big hit, leaving himself briefly open to counterattacks."
+      }
+    ],
+    "activeAbilities": [
+      "rex_power_punch",
+      "rex_bodyguard_instinct",
+      "rex_stubborn_stand",
+      "rex_wide_swing"
+    ],
+    "coreAbilities": [
+      "rex_power_punch",
+      "rex_bodyguard_instinct"
+    ]
+  },
+
+  "lester": {
+    "id": "lester",
+    "name": "Lester",
+    "role": "Trickster",
+    "roleClass": "trickster",
+    "position": "mid",
+    "maxHP": 32,
+    "attackBonus": 3,
+    "magicBonus": 1,
+    "defenseBonus": 2,
+    "speed": 5,
+    "luck": 4,
+    "abilities": [
+      {
+        "id": "lester_ninja_chop",
+        "name": "“Sub-Par Ninja Chop!”",
+        "type": "physical",
+        "category": "light",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "extraEffect": {
+          "enemy": {
+            "speed": -1,
+            "duration": 1
+          }
+        },
+        "description": "A dramatic “anime-style” chop that sometimes throws the target off-balance."
+      },
+      {
+        "id": "lester_rules_lawyer",
+        "name": "Rules Lawyer",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "effect": {
+          "attackBonus": -1
+        },
+        "duration": 2,
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "description": "Lester nitpicks the rules, rattling the foe and making their attacks less effective."
+      },
+      {
+        "id": "lester_anime_power_pose",
+        "name": "Anime Power Pose",
+        "type": "support",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 1,
+        "cooldown": 2,
+        "effect": {
+          "speed": 1,
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "Lester strikes a dramatic pose, hyping himself up with imagined theme music."
+      },
+      {
+        "id": "lester_flurry_of_fandom",
+        "name": "Flurry of Fandom",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.3,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d8+1",
+          "2d6+1",
+          "2d8+1"
+        ],
+        "description": "A rapid combo of “moves” inspired by way too many anime fight scenes."
+      }
+    ],
+    "loadoutSize": 4,
+    "abilityPool": [
+      {
+        "id": "lester_ninja_chop",
+        "name": "“Sub-Par Ninja Chop!”",
+        "type": "physical",
+        "category": "light",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "extraEffect": {
+          "enemy": {
+            "speed": -1,
+            "duration": 1
+          }
+        },
+        "description": "A dramatic “anime-style” chop that sometimes throws the target off-balance."
+      },
+      {
+        "id": "lester_rules_lawyer",
+        "name": "Rules Lawyer",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "effect": {
+          "attackBonus": -1
+        },
+        "duration": 2,
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "description": "Lester nitpicks the rules, rattling the foe and making their attacks less effective."
+      },
+      {
+        "id": "lester_anime_power_pose",
+        "name": "Anime Power Pose",
+        "type": "support",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "self",
+        "aiWeight": 1,
+        "cooldown": 2,
+        "effect": {
+          "speed": 1,
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "Lester strikes a dramatic pose, hyping himself up with imagined theme music."
+      },
+      {
+        "id": "lester_flurry_of_fandom",
+        "name": "Flurry of Fandom",
+        "type": "physical",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.3,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d8+1",
+          "2d6+1",
+          "2d8+1"
+        ],
+        "description": "A rapid combo of “moves” inspired by way too many anime fight scenes."
+      },
+      {
+        "id": "lester_dub_rant",
+        "name": "Dub Rant",
+        "type": "support",
+        "category": "light",
+        "rank": 1,
+        "aoe": "enemy-team",
+        "targeting": "any-enemy",
+        "aiWeight": 1,
+        "effect": {
+          "luck": -1
+        },
+        "duration": 1,
+        "description": "Lester goes on a tirade about “butchered dubs”, briefly distracting the opposing team."
+      }
+    ],
+    "activeAbilities": [
+      "lester_ninja_chop",
+      "lester_rules_lawyer",
+      "lester_anime_power_pose",
+      "lester_flurry_of_fandom"
+    ],
+    "coreAbilities": [
+      "lester_ninja_chop",
+      "lester_rules_lawyer"
+    ]
+  },
+
+  "dallas": {
+    "id": "dallas",
+    "name": "Dallas",
+    "role": "Support",
+    "roleClass": "support",
+    "position": "back",
+    "maxHP": 34,
+    "attackBonus": 3,
+    "magicBonus": 2,
+    "defenseBonus": 3,
+    "speed": 3,
+    "luck": 4,
+    "abilities": [
+      {
+        "id": "dallas_logical_strike",
+        "name": "Logical Strike",
+        "type": "physical",
+        "category": "light",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "extraDamageIfTargetDebuffed": 1,
+        "description": "A precise hit delivered after cool analysis of the foe’s openings."
+      },
+      {
+        "id": "dallas_techno_scan",
+        "name": "Techno-Scan",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "effect": {
+          "defenseBonus": -1
+        },
+        "duration": 2,
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "description": "Dallas runs a “sensor sweep”, identifying weak points and lowering the target’s defenses."
+      },
+      {
+        "id": "dallas_stabilizing_field",
+        "name": "Stabilizing Field",
+        "type": "support",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1.3,
+        "effect": {
+          "defenseBonus": 1,
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "A calm, focused assist that steadies an ally and improves their chances."
+      },
+      {
+        "id": "dallas_emergency_beam_out",
+        "name": "Emergency Beam-Out",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "allyLowHP",
+          "action": "heal",
+          "heal": "1d6+2",
+          "target": "ally"
+        },
+        "reactionDuration": 3,
+        "description": "When an ally is in critical condition, Dallas “beams” them out of danger with a quick rescue."
+      }
+    ],
+    "loadoutSize": 4,
+    "abilityPool": [
+      {
+        "id": "dallas_logical_strike",
+        "name": "Logical Strike",
+        "type": "physical",
+        "category": "light",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1,
+        "hitStat": "attackBonus",
+        "damageByRank": [
+          "1d6+1",
+          "1d8+1",
+          "2d4+1"
+        ],
+        "extraDamageIfTargetDebuffed": 1,
+        "description": "A precise hit delivered after cool analysis of the foe’s openings."
+      },
+      {
+        "id": "dallas_techno_scan",
+        "name": "Techno-Scan",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "any-enemy",
+        "aiWeight": 1.1,
+        "effect": {
+          "defenseBonus": -1
+        },
+        "duration": 2,
+        "saveStat": "luck",
+        "saveDifficulty": 13,
+        "description": "Dallas runs a “sensor sweep”, identifying weak points and lowering the target’s defenses."
+      },
+      {
+        "id": "dallas_stabilizing_field",
+        "name": "Stabilizing Field",
+        "type": "support",
+        "category": "medium",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 1.3,
+        "effect": {
+          "defenseBonus": 1,
+          "luck": 1
+        },
+        "duration": 2,
+        "description": "A calm, focused assist that steadies an ally and improves their chances."
+      },
+      {
+        "id": "dallas_emergency_beam_out",
+        "name": "Emergency Beam-Out",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "single",
+        "targeting": "ally",
+        "aiWeight": 0.8,
+        "reaction": {
+          "trigger": "allyLowHP",
+          "action": "heal",
+          "heal": "1d6+2",
+          "target": "ally"
+        },
+        "reactionDuration": 3,
+        "description": "When an ally is in critical condition, Dallas “beams” them out of danger with a quick rescue."
+      },
+      {
+        "id": "dallas_prime_directive",
+        "name": "Prime Directive Reminder",
+        "type": "support",
+        "category": "support",
+        "rank": 1,
+        "aoe": "team",
+        "targeting": "team",
+        "aiWeight": 0.95,
+        "effect": {
+          "defenseBonus": 1
+        },
+        "duration": 2,
+        "description": "Dallas reminds everyone of “proper protocol”, encouraging the team to avoid reckless moves."
+      }
+    ],
+    "activeAbilities": [
+      "dallas_logical_strike",
+      "dallas_techno_scan",
+      "dallas_stabilizing_field",
+      "dallas_emergency_beam_out"
+    ],
+    "coreAbilities": [
+      "dallas_logical_strike",
+      "dallas_techno_scan"
+    ]
+  }
+}
+
 }
