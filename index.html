@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Babylon League & Babylon Gardens Cup</title>
+  <title>Babylon League, Cup & Playoffs</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -163,16 +163,30 @@
 	  border-top: 1px solid #444;
 	}
 	
-	.calendar-match {
-	  margin-top: 0.25rem;
-	  display: flex;
-	  flex-direction: column;
-	  gap: 0.25rem;
-	}
+        .calendar-match {
+          margin-top: 0.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .conference-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 0.75rem;
+        }
+
+        .conference-card h4 {
+          margin: 0 0 0.25rem;
+        }
+
+        .playoff-line {
+          background: rgba(58, 123, 213, 0.08);
+        }
   </style>
 </head>
 <body>
-  <h1>Babylon League & Babylon Gardens Cup</h1>
+  <h1>Babylon League, Cup & Playoffs</h1>
   <div id="app-status" role="status" aria-live="polite"></div>
 
 	<div id="participants-panel">
@@ -202,24 +216,51 @@
   <div id="layout">
     <div>
       <div id="league-panel">
-        <h3>Babylon League (Round Robin)</h3>
+        <h3>Babylon League (Regular Season)</h3>
+        <p style="margin-top:0; color:#bbb;">Two conferences of six teams — top four in each advance to the playoffs.</p>
         <div id="league-status"></div>
-        <table>
-          <thead>
-            <tr>
-              <th>Team</th>
-              <th>Pts</th>
-              <th>W</th>
-              <th>D</th>
-              <th>L</th>
-            </tr>
-          </thead>
-          <tbody id="league-table-body"></tbody>
-        </table>
+        <div class="conference-grid">
+          <div class="conference-card">
+            <h4>Eastern Conference</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>Pts</th>
+                  <th>W</th>
+                  <th>D</th>
+                  <th>L</th>
+                </tr>
+              </thead>
+              <tbody id="east-league-body"></tbody>
+            </table>
+          </div>
+          <div class="conference-card">
+            <h4>Western Conference</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>Pts</th>
+                  <th>W</th>
+                  <th>D</th>
+                  <th>L</th>
+                </tr>
+              </thead>
+              <tbody id="west-league-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div id="cup-panel">
-        <h3>Babylon Gardens Cup (Knockout)</h3>
+        <h3>Playoffs (Top 4 Each Conference)</h3>
+        <div id="playoffs-status"></div>
+      </div>
+
+      <div id="knockout-panel">
+        <h3>Babylon Cup (League Seeding)</h3>
+        <p style="margin-top:0; color:#bbb;">Traditional seeded knockout based on league standings.</p>
         <div id="cup-status"></div>
       </div>
     </div>

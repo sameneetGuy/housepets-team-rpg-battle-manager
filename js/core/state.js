@@ -7,7 +7,7 @@ export const GAME = {
   // Stable order of fighter ids (useful for tables / loops)
   fighterOrder: [],
 
-  // Teams participating in the league (8 teams, 3 fighters each)
+  // Teams participating in the league (12 teams, 3 fighters each)
   teams: [],
 
   // League (round robin)
@@ -17,7 +17,15 @@ export const GAME = {
     finished: false // has the league ended this season?
   },
 
-  // Babylon Gardens Cup (knockout)
+  // Playoffs (knockout for league title)
+  playoffs: {
+    matches: [],        // current round matches
+    round: 0,           // round index (0 = QF, etc.)
+    finished: false,    // has the cup ended this season?
+    winnerTeamIndex: null // index of cup winner team in GAME.teams
+  },
+
+  // Cup (seeded knockout)
   cup: {
     matches: [],        // current round matches
     round: 0,           // round index (0 = QF, etc.)

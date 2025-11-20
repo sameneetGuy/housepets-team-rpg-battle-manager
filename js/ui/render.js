@@ -1,13 +1,14 @@
 // js/ui/render.js
 
 import { GAME } from "../core/state.js";
-import { getLeagueStandings } from "../season/teams.js";
+import { getConferenceStandings } from "../season/teams.js";
 import { getLeagueChampionIndex } from "../season/season_manager.js";
 
 export function renderAll() {
   renderParticipants();
   renderTeamsTitles();
   renderLeague();
+  renderPlayoffs();
   renderCup();
   renderCalendar();
   renderDayLabel();
@@ -109,14 +110,16 @@ function renderTeamsTitles() {
 
 function renderLeague() {
   const statusDiv = document.getElementById("league-status");
-  const tbody = document.getElementById("league-table-body");
-  if (!statusDiv || !tbody) return;
+  const eastBody = document.getElementById("east-league-body");
+  const westBody = document.getElementById("west-league-body");
+  if (!statusDiv || !eastBody || !westBody) return;
 
   const league = GAME.league;
 
   if (!league.schedule || league.schedule.length === 0) {
     statusDiv.textContent = "League not started.";
-    tbody.innerHTML = "";
+    eastBody.innerHTML = "";
+    westBody.innerHTML = "";
     return;
   }
 
@@ -132,18 +135,66 @@ function renderLeague() {
     }
   }
 
-  const standings = getLeagueStandings();
-  let rows = "";
-  for (const t of standings) {
-    rows += `<tr>
+  const eastern = getConferenceStandings("Eastern Conference");
+  const western = getConferenceStandings("Western Conference");
+
+  const buildRows = (list) =>
+    list
+      .map((t, idx) => {
+        const playoffClass = idx < 4 ? " class=\"playoff-line\"" : "";
+        return `<tr${playoffClass}>
       <td>${t.name}</td>
       <td>${t.points}</td>
       <td>${t.wins}</td>
       <td>${t.draws}</td>
       <td>${t.losses}</td>
     </tr>`;
+      })
+      .join("");
+
+  eastBody.innerHTML = buildRows(eastern);
+  westBody.innerHTML = buildRows(western);
+}
+
+function renderPlayoffs() {
+  const statusDiv = document.getElementById("playoffs-status");
+  if (!statusDiv) return;
+
+  const playoffs = GAME.playoffs;
+
+  if (!playoffs || ((!playoffs.matches || playoffs.matches.length === 0) && !playoffs.finished)) {
+    statusDiv.textContent = "Playoffs not started.";
+    return;
   }
-  tbody.innerHTML = rows;
+
+  const parts = [];
+
+  if (playoffs.finished) {
+    if (playoffs.winnerTeamIndex != null) {
+      const team = GAME.teams[playoffs.winnerTeamIndex];
+      parts.push(`Playoffs finished. Champion: ${team.name}`);
+    } else {
+      parts.push("Playoffs finished.");
+    }
+  } else {
+    const roundNames = ["Quarterfinals", "Semifinals", "Final"];
+    const roundName = roundNames[playoffs.round] || "Playoff Round";
+    parts.push(`<div>Current Round: ${roundName}</div>`);
+    if (Array.isArray(playoffs.matches) && playoffs.matches.length > 0) {
+      const li = playoffs.matches
+        .map(([aIdx, bIdx]) => {
+          const a = GAME.teams[aIdx];
+          const b = GAME.teams[bIdx];
+          return `<li>${a?.name ?? "?"} vs ${b?.name ?? "?"}</li>`;
+        })
+        .join("");
+      if (li) {
+        parts.push(`<ul>${li}</ul>`);
+      }
+    }
+  }
+
+  statusDiv.innerHTML = parts.join("");
 }
 
 function renderCup() {
@@ -173,7 +224,7 @@ function renderCup() {
     }
   } else {
     const roundNames = ["Quarterfinals", "Semifinals", "Final"];
-    const roundName = roundNames[cup.round] || "Knockout";
+    const roundName = roundNames[cup.round] || "Cup Round";
     parts.push(`<div>Current Round: ${roundName}</div>`);
     if (Array.isArray(cup.matches) && cup.matches.length > 0) {
       const li = cup.matches
