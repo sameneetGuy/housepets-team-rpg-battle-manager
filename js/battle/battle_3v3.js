@@ -1378,7 +1378,7 @@ function cloneFighterForBattle(f) {
 
 // Run a single battle on existing fighter objects (no cloning here).
 // aF and bF are mutated in-place: hp, effects, cooldowns, flags, etc.
-function runBattleOnExistingFighters(aF, bF) {
+function runBattleOnExistingFighters(aF, bF, options = {}) {
   const log = [];
 
   log.push(
@@ -1441,17 +1441,40 @@ function runBattleOnExistingFighters(aF, bF) {
   return { winner, log: log.join("\n") };
 }
 
-// Single-battle entrypoint (used for places that still want BO1, like Super Cup)
-export function simulateTeamBattle(teamA, teamB) {
+/**
+ * Simulate a single 3v3 battle between two teams.
+ *
+ * @param {Array<Object>} teamA - Array of fighter base objects (e.g. from GAME.fighters).
+ * @param {Array<Object>} teamB - Array of fighter base objects.
+ * @param <Object> options - For now, options is unused
+ * @returns {{ winner: "A" | "B" | "DRAW", log: string }}
+ *
+ * Notes:
+ * - Fighters are cloned internally; originals are not mutated.
+ * - AI may be biased by GAME.metaTrend (if set).
+ */
+export function simulateTeamBattle(teamA, teamB, options = {}) {
   const preparedA = prepareTeamLoadouts(teamA, teamB);
   const preparedB = prepareTeamLoadouts(teamB, teamA);
   const aF = preparedA.map(cloneFighterForBattle);
   const bF = preparedB.map(cloneFighterForBattle);
-  return runBattleOnExistingFighters(aF, bF);
+  return runBattleOnExistingFighters(aF, bF, options);
 }
 
-// Multi-game series: HP resets between games, but effects/cooldowns/flags persist.
-export function simulateTeamSeries(teamA, teamB, games = 2) {
+/**
+ * Simulate a multi-game series between two teams.
+ *
+ * @param {Array<Object>} teamA
+ * @param {Array<Object>} teamB
+ * @param {number} games - Number of games (default 2).
+ * @param <Object> options - For now, options is unused
+ * @returns {{ winner: "A" | "B" | "DRAW", log: string }}
+ *
+ * Notes:
+ * - HP is reset between games, but ongoing effects / cooldowns / flags persist.
+ * - Use this when you want to allow draws (e.g. best-of-2).
+ */
+export function simulateTeamSeries(teamA, teamB, games = 2, options = {}) {
   const preparedA = prepareTeamLoadouts(teamA, teamB);
   const preparedB = prepareTeamLoadouts(teamB, teamA);
   const aF = preparedA.map(cloneFighterForBattle);
@@ -1472,7 +1495,7 @@ export function simulateTeamSeries(teamA, teamB, games = 2) {
       f.usedCharges = {};
     }
 
-    const { winner, log } = runBattleOnExistingFighters(aF, bF);
+    const { winner, log } = runBattleOnExistingFighters(aF, bF, options);
 
     seriesLogs.push(`Game ${g}\n${log}`);
 
