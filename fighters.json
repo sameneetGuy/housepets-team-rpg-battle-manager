@@ -6539,7 +6539,6 @@
 			}
 		]
 	},
-	{
   "rex": {
     "id": "rex",
     "name": "Rex",
@@ -7095,6 +7094,4 @@
       "dallas_techno_scan"
     ]
   }
-}
-
 }
