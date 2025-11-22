@@ -6,6 +6,7 @@ import {
   getCupStageName,
   getLeagueChampionIndex
 } from "../season/season_manager.js";
+import { renderTradeUI } from "./trade_ui.js";
 
 export function renderAll() {
   renderParticipants();
@@ -16,6 +17,7 @@ export function renderAll() {
   renderCalendar();
   renderDayLabel();
   renderSeasonMeta();
+  renderTradeUI();
 }
 
 function renderDayLabel() {
