@@ -20,78 +20,75 @@ const BASE_TEAMS = [
   {
     id: "babylon_knights",
     name: "Babylon Knights",
-    fighterIds: ["bailey", "keene", "sabrina"],
-    conference: "Western Conference",
+    fighterIds: ["bailey", "king", "sasha"],
+    conference: "Eastern Conference",
   },
   {
     id: "k9pd",
     name: "K9PD",
-    fighterIds: ["fido", "grape", "sasha"],
+    fighterIds: ["ralph", "terrace", "peanut"],
     conference: "Western Conference",
   },
   {
     id: "pridelands_warriors",
     name: "Pridelands Warriors",
-    fighterIds: ["kevin", "maxwell", "peanut"],
+    fighterIds: ["satau", "grape", "maxwell"],
     conference: "Eastern Conference",
   },
   {
     id: "milton_estate",
     name: "Milton Estate",
-    fighterIds: ["king", "breel", "bino"],
-    conference: "Eastern Conference",
+    fighterIds: ["miles", "lana", "keene"],
+    conference: "Western Conference",
   },
   {
     id: "odd_company",
     name: "Odd Company",
-    fighterIds: ["tiger", "lucretia", "marvin"],
+    fighterIds: ["lucretia", "tiger", "marvin"],
     conference: "Western Conference",
   },
   {
-    id: "chaotic_enterprises",
-    name: "Chaotic Enterprises",
-    fighterIds: ["mungo", "terrace", "natalie"],
-    conference: "Eastern Conference",
+    id: "chaotic_gardens",
+    name: "Chaotic Gardens",
+    fighterIds: ["itsuki", "steve", "karishad"],
+    conference: "Western Conference",
   },
   {
     id: "speedsters_casters",
     name: "Speedsters & Casters",
-    fighterIds: ["fox", "joey", "lana"],
+    fighterIds: ["mungo", "fox", "bino"],
     conference: "Eastern Conference",
   },
   {
     id: "temple_crashers",
     name: "Temple Crashers",
-    fighterIds: ["tarot", "karishad", "ralph"],
+    fighterIds: ["rex", "tarot", "sabrina"],
     conference: "Eastern Conference",
   },
-
-  // ===== New Teams for 12-team League =====
-
   {
-    id: "cosmic_weasel",
-    name: "Cosmic Weasel",
-    fighterIds: ["steve", "zach", "jessica"],
+    id: "underdog_wonders",
+    name: "Underdog Wonders",
+    fighterIds: ["fido", "natalie", "zach"],
     conference: "Eastern Conference",
   },
   {
     id: "ancient_guardians",
     name: "Ancient Guardians",
-    fighterIds: ["ptah", "satau", "rufus"],
+    fighterIds: ["ptah", "rufus", "breel"],
     conference: "Western Conference",
   },
   {
     id: "forest_ferals",
     name: "Forest & Ferals",
-    fighterIds: ["gale", "miles", "itsuki"],
-    conference: "Western Conference",
+    fighterIds: ["kevin", "gale", "jessica"],
+    conference: "Eastern Conference",
   },
   {
-    id: "street_legends",
-    name: "Street Legends",
-    fighterIds: ["rex", "lester", "dallas"],
+    id: "dungeon_legends",
+    name: "Dungeon Legends",
+    fighterIds: ["dallas", "lester", "joey"],
     conference: "Western Conference",
-  },
+  }
 ];
 
 /**

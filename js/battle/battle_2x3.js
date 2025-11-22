@@ -104,6 +104,40 @@ function getEffectiveStat(fighter, stat) {
   return total;
 }
 
+function rollD20() {
+  return Math.floor(Math.random() * 20) + 1;
+}
+
+// Contest attack vs defense to determine if a damaging ability hits.
+function attemptAttackHit(state, caster, target, ability) {
+  const atk = getEffectiveStat(caster, "attack");
+  const def = getEffectiveStat(target, "defense");
+  const attackRoll = rollD20() + atk;
+  const defenseRoll = rollD20() + def;
+
+  if (attackRoll >= defenseRoll) {
+    return true;
+  } else {
+    state.log.push(`${caster.name}'s ${ability.name} misses ${target.name}.`);
+    return false;
+  }
+}
+
+// Contest speed vs speed to determine if a pure debuff lands.
+function attemptDebuffHit(state, caster, target, ability) {
+  const atkSpeed = getEffectiveStat(caster, "speed");
+  const defSpeed = getEffectiveStat(target, "speed");
+  const attackRoll = rollD20() + atkSpeed;
+  const defenseRoll = rollD20() + defSpeed;
+
+  if (attackRoll >= defenseRoll) {
+    return true;
+  } else {
+    state.log.push(`${caster.name}'s ${ability.name} fails to affect ${target.name}.`);
+    return false;
+  }
+}
+
 function applyBuffs(target, buffArray) {
   if (!Array.isArray(buffArray)) return;
   for (const buff of buffArray) {
@@ -374,11 +408,32 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
   }
 
   const effect = ability.effect || {};
+  const isEnemyTarget = ability.target === "enemy";
 
   for (const targetRef of targets) {
     const teamState = targetRef.team === "A" ? state.teamA : state.teamB;
     const target = teamState.fighters[targetRef.id];
     if (!isAlive(target)) continue;
+
+    // --- Hit checks for enemy-targeting abilities ---
+    if (isEnemyTarget) {
+      const hasDamage = !!effect.damage;
+      const hasDebuffs = Array.isArray(effect.debuffs) && effect.debuffs.length > 0;
+
+      if (hasDamage) {
+        const hit = attemptAttackHit(state, caster, target, ability);
+        if (!hit) {
+          // On a miss, do not apply damage or offensive riders to this target.
+          continue;
+        }
+      } else if (hasDebuffs && ability.category === "debuff") {
+        const hit = attemptDebuffHit(state, caster, target, ability);
+        if (!hit) {
+          // Pure debuff failed to land on this target.
+          continue;
+        }
+      }
+    }
 
     if (effect.damage) {
       dealDamage(state, caster, targetRef, effect.damage, state.log);

@@ -1,9 +1,45 @@
 [
   {
+    "id": "brace",
+    "name": "Brace",
+    "role": "Tank",
+    "subRoleTags": [
+      "Warden"
+    ],
+    "type": "support",
+    "category": "buff",
+    "target": "self",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [
+        {
+          "stat": "defense",
+          "amount": 1,
+          "duration": 2
+        }
+      ],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
     "id": "guard_slam",
     "name": "Guard Slam",
     "role": "Tank",
-    "subRoleTags": ["Paladin", "Bruiser"],
+    "subRoleTags": [
+      "Paladin",
+      "Bruiser"
+    ],
     "type": "melee",
     "category": "attack",
     "target": "enemy",
@@ -25,10 +61,102 @@
     "oncePerBattle": false
   },
   {
+    "id": "intercept_strike",
+    "name": "Intercept Strike",
+    "role": "Tank",
+    "subRoleTags": [
+      "Warden"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": true,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
+    "id": "line_cleave",
+    "name": "Line Cleave",
+    "role": "Tank",
+    "subRoleTags": [
+      "Paladin",
+      "Vanguard"
+    ],
+    "type": "melee",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "front_row",
+      "delivery": "melee",
+      "stepIn": true,
+      "diagonal": true,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
+  },
+  {
+    "id": "shield_bash",
+    "name": "Shield Bash",
+    "role": "Tank",
+    "subRoleTags": [
+      "Paladin",
+      "Bruiser"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": false,
+      "diagonal": true,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": [
+        {
+          "stat": "speed",
+          "amount": -1,
+          "duration": 1
+        }
+      ]
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
     "id": "shield_wall",
     "name": "Shield Wall",
     "role": "Tank",
-    "subRoleTags": ["Paladin", "Guardian"],
+    "subRoleTags": [
+      "Paladin",
+      "Guardian"
+    ],
     "type": "support",
     "category": "shield",
     "target": "ally",
@@ -53,7 +181,10 @@
     "id": "step_in_taunt",
     "name": "Step-In Taunt",
     "role": "Tank",
-    "subRoleTags": ["Bruiser", "Defender"],
+    "subRoleTags": [
+      "Bruiser",
+      "Defender"
+    ],
     "type": "melee",
     "category": "debuff",
     "target": "enemy",
@@ -81,19 +212,22 @@
     "oncePerBattle": false
   },
   {
-    "id": "line_cleave",
-    "name": "Line Cleave",
-    "role": "Tank",
-    "subRoleTags": ["Paladin", "Vanguard"],
-    "type": "melee",
+    "id": "chaos_barrage",
+    "name": "Chaos Barrage",
+    "role": "DPS",
+    "subRoleTags": [
+      "Artillery",
+      "Blitzer"
+    ],
+    "type": "projectile",
     "category": "aoe",
     "target": "enemy",
     "range": {
-      "pattern": "front_row",
-      "delivery": "melee",
-      "stepIn": true,
-      "diagonal": true,
-      "lanes": "any"
+      "pattern": "random2",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "arc"
     },
     "effect": {
       "damage": 1,
@@ -106,10 +240,66 @@
     "oncePerBattle": true
   },
   {
-    "id": "quick_cut",
-    "name": "Quick Cut",
+    "id": "dash_strike",
+    "name": "Dash Strike",
     "role": "DPS",
-    "subRoleTags": ["Striker", "Duelist"],
+    "subRoleTags": [
+      "Striker"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": true,
+      "diagonal": true,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 1,
+    "oncePerBattle": false
+  },
+  {
+    "id": "execute",
+    "name": "Execute",
+    "role": "DPS",
+    "subRoleTags": [
+      "Assassin"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": true,
+      "diagonal": false,
+      "lanes": "same_lane"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
+    "id": "flanking_strike",
+    "name": "Flanking Strike",
+    "role": "DPS",
+    "subRoleTags": [
+      "Striker"
+    ],
     "type": "melee",
     "category": "attack",
     "target": "enemy",
@@ -125,16 +315,25 @@
       "heal": 0,
       "shield": 0,
       "buffs": [],
-      "debuffs": []
+      "debuffs": [
+        {
+          "stat": "defense",
+          "amount": -1,
+          "duration": 1
+        }
+      ]
     },
-    "cooldown": 0,
+    "cooldown": 2,
     "oncePerBattle": false
   },
   {
     "id": "lane_shot",
     "name": "Lane Shot",
     "role": "DPS",
-    "subRoleTags": ["Marksman", "Archer"],
+    "subRoleTags": [
+      "Marksman",
+      "Archer"
+    ],
     "type": "projectile",
     "category": "attack",
     "target": "enemy",
@@ -159,7 +358,10 @@
     "id": "piercing_thrust",
     "name": "Piercing Thrust",
     "role": "DPS",
-    "subRoleTags": ["Striker", "Assassin"],
+    "subRoleTags": [
+      "Striker",
+      "Assassin"
+    ],
     "type": "melee",
     "category": "attack",
     "target": "enemy",
@@ -181,10 +383,40 @@
     "oncePerBattle": false
   },
   {
-    "id": "chaos_barrage",
-    "name": "Chaos Barrage",
+    "id": "quick_cut",
+    "name": "Quick Cut",
     "role": "DPS",
-    "subRoleTags": ["Artillery", "Blitzer"],
+    "subRoleTags": [
+      "Striker",
+      "Duelist"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": false,
+      "diagonal": true,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 1,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": false
+  },
+  {
+    "id": "ricochet_shot",
+    "name": "Ricochet Shot",
+    "role": "DPS",
+    "subRoleTags": [
+      "Marksman"
+    ],
     "type": "projectile",
     "category": "aoe",
     "target": "enemy",
@@ -202,57 +434,6 @@
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 0,
-    "oncePerBattle": true
-  },
-  {
-    "id": "comforting_heal",
-    "name": "Comforting Heal",
-    "role": "Support",
-    "subRoleTags": ["Healer"],
-    "type": "support",
-    "category": "heal",
-    "target": "ally",
-    "range": {
-      "pattern": "single",
-      "delivery": "support",
-      "stepIn": false,
-      "diagonal": false,
-      "lanes": "same_or_adjacent"
-    },
-    "effect": {
-      "damage": 0,
-      "heal": 1,
-      "shield": 0,
-      "buffs": [],
-      "debuffs": []
-    },
-    "cooldown": 3,
-    "oncePerBattle": false,
-    "interruptible": true
-  },
-  {
-    "id": "protective_shield",
-    "name": "Protective Shield",
-    "role": "Support",
-    "subRoleTags": ["Healer", "Tactician"],
-    "type": "support",
-    "category": "shield",
-    "target": "ally",
-    "range": {
-      "pattern": "single",
-      "delivery": "support",
-      "stepIn": false,
-      "diagonal": false,
-      "lanes": "same_or_adjacent"
-    },
-    "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 1,
-      "buffs": [],
-      "debuffs": []
-    },
     "cooldown": 2,
     "oncePerBattle": false
   },
@@ -260,7 +441,10 @@
     "id": "attack_buff",
     "name": "Tactical Uplift",
     "role": "Support",
-    "subRoleTags": ["Tactician", "Leader"],
+    "subRoleTags": [
+      "Tactician",
+      "Leader"
+    ],
     "type": "support",
     "category": "buff",
     "target": "ally",
@@ -288,10 +472,287 @@
     "oncePerBattle": false
   },
   {
+    "id": "barrier_field",
+    "name": "Barrier Field",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer",
+      "Defender"
+    ],
+    "type": "support",
+    "category": "shield",
+    "target": "ally",
+    "range": {
+      "pattern": "team",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 1,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
+  },
+  {
+    "id": "clarity_pulse",
+    "name": "Clarity Pulse",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer",
+      "ArcaneController"
+    ],
+    "type": "support",
+    "category": "buff",
+    "target": "ally",
+    "range": {
+      "pattern": "team",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [
+        {
+          "stat": "speed",
+          "amount": 1,
+          "duration": 1
+        }
+      ],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": true
+  },
+  {
+    "id": "comforting_heal",
+    "name": "Comforting Heal",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer"
+    ],
+    "type": "support",
+    "category": "heal",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 1,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false,
+    "interruptible": true
+  },
+  {
+    "id": "encouraging_words",
+    "name": "Encouraging Words",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer",
+      "Buffer"
+    ],
+    "type": "support",
+    "category": "buff",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [
+        {
+          "stat": "speed",
+          "amount": 1,
+          "duration": 1
+        }
+      ],
+      "debuffs": []
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
+    "id": "hex_mist",
+    "name": "Hex Mist",
+    "role": "Support",
+    "subRoleTags": [
+      "Debuffer",
+      "ArcaneController"
+    ],
+    "type": "projectile",
+    "category": "debuff",
+    "target": "enemy",
+    "range": {
+      "pattern": "random2",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "arc"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": [
+        {
+          "stat": "attack",
+          "amount": -1,
+          "duration": 1
+        }
+      ]
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
+    "id": "hopeful_cheer",
+    "name": "Hopeful Cheer",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer",
+      "Buffer"
+    ],
+    "type": "support",
+    "category": "buff",
+    "target": "ally",
+    "range": {
+      "pattern": "team",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [
+        {
+          "stat": "speed",
+          "amount": 1,
+          "duration": 1
+        }
+      ],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
+    "id": "lane_swap",
+    "name": "Lane Swap",
+    "role": "Support",
+    "subRoleTags": [
+      "Trickster"
+    ],
+    "type": "support",
+    "category": "utility",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": true,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 0,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
+    "id": "protective_shield",
+    "name": "Protective Shield",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer",
+      "Tactician"
+    ],
+    "type": "support",
+    "category": "shield",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 1,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
+    "id": "radiant_pulse",
+    "name": "Radiant Pulse",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer"
+    ],
+    "type": "support",
+    "category": "shield",
+    "target": "ally",
+    "range": {
+      "pattern": "team",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "any"
+    },
+    "effect": {
+      "damage": 0,
+      "heal": 0,
+      "shield": 1,
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
+  },
+  {
     "id": "speed_sap",
     "name": "Speed Sap",
     "role": "Support",
-    "subRoleTags": ["ArcaneController", "Trickster"],
+    "subRoleTags": [
+      "ArcaneController",
+      "Trickster"
+    ],
     "type": "support",
     "category": "debuff",
     "target": "enemy",
@@ -319,28 +780,30 @@
     "oncePerBattle": false
   },
   {
-    "id": "barrier_field",
-    "name": "Barrier Field",
+    "id": "warm_heal",
+    "name": "Warm Heal",
     "role": "Support",
-    "subRoleTags": ["Healer", "Defender"],
+    "subRoleTags": [
+      "Healer"
+    ],
     "type": "support",
-    "category": "shield",
+    "category": "heal",
     "target": "ally",
     "range": {
-      "pattern": "team",
+      "pattern": "single",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
-      "lanes": "any"
+      "lanes": "same_or_adjacent"
     },
     "effect": {
       "damage": 0,
-      "heal": 0,
-      "shield": 1,
+      "heal": 1,
+      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 0,
-    "oncePerBattle": true
+    "cooldown": 2,
+    "oncePerBattle": false
   }
 ]
