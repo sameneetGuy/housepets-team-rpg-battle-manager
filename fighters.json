@@ -6,7 +6,7 @@
     "subRole": "Paladin",
     "maxHP": 4,
     "attack": 4,
-    "defense": 5,
+    "defense": 4,
     "speed": 3,
     "abilities": [
       "guard_slam",
@@ -309,7 +309,7 @@
     "defense": 5,
     "speed": 3,
     "abilities": [
-      "brace",
+      "shield_bash",
       "shield_wall",
       "intercept_strike",
       "line_cleave"
@@ -329,7 +329,7 @@
     "defense": 2,
     "speed": 3,
     "abilities": [
-      "lane_shot",
+      "quick_cut",
       "ricochet_shot",
       "hex_mist",
       "chaos_barrage"
@@ -349,12 +349,12 @@
     "defense": 3,
     "speed": 4,
     "abilities": [
-      "encouraging_words",
+      "lane_swap",
       "speed_sap",
       "hex_mist",
-      "barrier_field"
+      "chaos_barrage"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "chaos_barrage",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -485,9 +485,9 @@
     "role": "Tank",
     "subRole": "BruiserTank",
     "maxHP": 4,
-    "attack": 5,
-    "defense": 4,
-    "speed": 3,
+    "attack": 4,
+    "defense": 3,
+    "speed": 2,
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -543,7 +543,7 @@
     "subRole": "Warden",
     "maxHP": 4,
     "attack": 4,
-    "defense": 6,
+    "defense": 5,
     "speed": 3,
     "abilities": [
       "brace",
@@ -663,7 +663,7 @@
     "subRole": "Defender",
     "maxHP": 4,
     "attack": 3,
-    "defense": 5,
+    "defense": 4,
     "speed": 3,
     "abilities": [
       "shield_wall",
