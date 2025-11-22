@@ -439,39 +439,44 @@
     "oncePerBattle": false
   },
   {
-    "id": "attack_buff",
-    "name": "Tactical Uplift",
-    "role": "Support",
-    "subRoleTags": [
-      "Tactician",
-      "Leader"
-    ],
-    "type": "support",
-    "category": "buff",
-    "target": "ally",
-    "range": {
-      "pattern": "single",
-      "delivery": "support",
-      "stepIn": false,
-      "diagonal": false,
-      "lanes": "same_or_adjacent"
-    },
-    "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
-      "buffs": [
-        {
-          "stat": "attack",
-          "amount": 1,
-          "duration": 3
-        }
-      ],
-      "debuffs": []
-    },
-    "cooldown": 2,
-    "oncePerBattle": false
+  "id": "attack_buff",
+  "name": "Tactical Uplift",
+  "role": "Support",
+  "subRoleTags": [
+    "Tactician",
+    "Leader"
+  ],
+  "type": "support",
+  "category": "buff",
+  "target": "ally",
+  "range": {
+    "pattern": "single",
+    "delivery": "support",
+    "stepIn": false,
+    "diagonal": false,
+    "lanes": "same_or_adjacent"
   },
+  "effect": {
+    "damage": 0,
+    "heal": 0,
+    "shield": 1,
+    "buffs": [
+      {
+        "stat": "defense",
+        "amount": 1,
+        "duration": 2
+      },
+      {
+        "stat": "speed",
+        "amount": 1,
+        "duration": 1
+      }
+    ],
+    "debuffs": []
+  },
+  "cooldown": 3,
+  "oncePerBattle": false
+},
   {
     "id": "barrier_field",
     "name": "Barrier Field",
@@ -484,7 +489,7 @@
     "category": "shield",
     "target": "ally",
     "range": {
-      "pattern": "team",
+      "pattern": "front_row",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
@@ -625,6 +630,11 @@
           "stat": "attack",
           "amount": -1,
           "duration": 2
+        },
+        {
+          "stat": "speed",
+          "amount": -1,
+          "duration": 1
         }
       ]
     },
@@ -662,8 +672,8 @@
       ],
       "debuffs": []
     },
-    "cooldown": 3,
-    "oncePerBattle": false
+    "cooldown": 4,
+    "oncePerBattle": true
   },
   {
     "id": "lane_swap",
@@ -778,35 +788,45 @@
         }
       ]
     },
-    "cooldown": 3,
+    "cooldown": 2,
     "oncePerBattle": false
   },
   {
-    "id": "warm_heal",
-    "name": "Warm Heal",
-    "role": "Support",
-    "subRoleTags": [
-      "Healer"
+  "id": "warm_heal",
+  "name": "Rallying Warmth",
+  "role": "Support",
+  "subRoleTags": ["Healer"],
+  "type": "support",
+  "category": "buff",
+  "target": "ally",
+  "range": {
+    "pattern": "single",
+    "delivery": "support",
+    "stepIn": false,
+    "diagonal": false,
+    "lanes": "same_or_adjacent"
+  },
+  "effect": {
+    "damage": 0,
+    "heal": 0,
+    "shield": 0,
+    "buffs": [
+      {
+        "stat": "attack",
+        "amount": 1,
+        "duration": 2
+      },
+      {
+        "stat": "defense",
+        "amount": 1,
+        "duration": 2
+      }
     ],
-    "type": "support",
-    "category": "heal",
-    "target": "ally",
-    "range": {
-      "pattern": "single",
-      "delivery": "support",
-      "stepIn": false,
-      "diagonal": false,
-      "lanes": "same_or_adjacent"
-    },
-    "effect": {
-      "damage": 0,
-      "heal": 1,
-      "shield": 0,
-      "buffs": [],
-      "debuffs": []
-    },
-    "cooldown": 2,
-    "oncePerBattle": false,
-    "interruptible": true
-  }
+    "debuffs": []
+  },
+  "cooldown": 3,
+  "oncePerBattle": false,
+  "cleanses": 1
+}
+
 ]

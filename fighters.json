@@ -32,14 +32,14 @@
   "sasha": {
     "id": "sasha",
     "name": "Sasha",
-    "subRole": "Healer",
+    "subRole": "Buffer",
     "abilities": [
-      "comforting_heal",
+      "encouraging_words",
       "protective_shield",
-      "attack_buff",
-      "barrier_field"
+      "warm_heal",
+      "hopeful_cheer"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "hopeful_cheer",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -51,7 +51,7 @@
     "abilities": [
       "guard_slam",
       "brace",
-      "intercept_strike",
+      "shield_bash",
       "line_cleave"
     ],
     "ultimateId": "line_cleave",
@@ -214,12 +214,12 @@
     "name": "Marvin",
     "subRole": "Healer",
     "abilities": [
-      "comforting_heal",
+      "warm_heal",
       "protective_shield",
       "clarity_pulse",
-      "barrier_field"
+      "radiant_pulse"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "radiant_pulse",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -345,20 +345,17 @@
     "superCupTitles": 0
   },
   "sabrina": {
-    "id": "sabrina",
-    "name": "Sabrina",
-    "subRole": "Healer",
-    "abilities": [
-      "comforting_heal",
-      "speed_sap",
-      "clarity_pulse",
-      "barrier_field"
-    ],
-    "ultimateId": "barrier_field",
-    "leagueTitles": 0,
-    "cupTitles": 0,
-    "superCupTitles": 0
-  },
+  "id": "sabrina",
+  "name": "Sabrina",
+  "subRole": "Mystic",
+  "abilities": [
+    "clarity_pulse",
+    "protective_shield",
+    "hex_mist",
+    "encouraging_words"
+  ],
+  "ultimateId": "clarity_pulse"
+},
   "fido": {
     "id": "fido",
     "name": "Fido",
@@ -434,14 +431,14 @@
   "breel": {
     "id": "breel",
     "name": "Breel",
-    "subRole": "Healer",
+    "subRole": "SpiritGuide",
     "abilities": [
       "comforting_heal",
-      "protective_shield",
-      "clarity_pulse",
-      "barrier_field"
+      "hex_mist",
+      "encouraging_words",
+      "radiant_pulse"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "radiant_pulse",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0

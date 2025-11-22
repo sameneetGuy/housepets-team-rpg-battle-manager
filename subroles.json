@@ -26,5 +26,6 @@
   "SpiritGuide":   { "role": "Support", "attack": 3, "defense": 4, "speed": 4 },
   "Trickster":     { "role": "Support", "attack": 3, "defense": 4, "speed": 4 },
   "Debuffer":      { "role": "Support", "attack": 3, "defense": 4, "speed": 4 },
-  "ArcaneController": { "role": "Support", "attack": 3, "defense": 4, "speed": 4 }
+  "ArcaneController": { "role": "Support", "attack": 3, "defense": 4, "speed": 4 },
+  "Mystic":        { "role": "Support", "attack": 3, "defense": 4, "speed": 4 }
 }
