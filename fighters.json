@@ -2,12 +2,7 @@
   "bailey": {
     "id": "bailey",
     "name": "Bailey",
-    "role": "Tank",
     "subRole": "Paladin",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 4,
-    "speed": 3,
     "abilities": [
       "guard_slam",
       "shield_wall",
@@ -22,12 +17,7 @@
   "king": {
     "id": "king",
     "name": "King",
-    "role": "DPS",
     "subRole": "Bruiser",
-    "maxHP": 3,
-    "attack": 4,
-    "defense": 3,
-    "speed": 3,
     "abilities": [
       "quick_cut",
       "piercing_thrust",
@@ -42,12 +32,7 @@
   "sasha": {
     "id": "sasha",
     "name": "Sasha",
-    "role": "Support",
     "subRole": "Healer",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "comforting_heal",
       "protective_shield",
@@ -62,12 +47,7 @@
   "ralph": {
     "id": "ralph",
     "name": "Ralph",
-    "role": "Tank",
     "subRole": "Warden",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 5,
-    "speed": 2,
     "abilities": [
       "guard_slam",
       "brace",
@@ -82,12 +62,7 @@
   "terrace": {
     "id": "terrace",
     "name": "Terrace",
-    "role": "DPS",
     "subRole": "Striker",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -102,12 +77,7 @@
   "peanut": {
     "id": "peanut",
     "name": "Peanut",
-    "role": "Support",
     "subRole": "Buffer",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "attack_buff",
       "clarity_pulse",
@@ -122,12 +92,7 @@
   "satau": {
     "id": "satau",
     "name": "Satau",
-    "role": "Tank",
     "subRole": "Vanguard",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 5,
-    "speed": 3,
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -142,12 +107,7 @@
   "grape": {
     "id": "grape",
     "name": "Grape",
-    "role": "DPS",
     "subRole": "Agile",
-    "maxHP": 3,
-    "attack": 4,
-    "defense": 2,
-    "speed": 5,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -162,12 +122,7 @@
   "maxwell": {
     "id": "maxwell",
     "name": "Maxwell",
-    "role": "Support",
     "subRole": "Trickster",
-    "maxHP": 3,
-    "attack": 3,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "lane_swap",
       "speed_sap",
@@ -182,12 +137,7 @@
   "miles": {
     "id": "miles",
     "name": "Miles",
-    "role": "Tank",
     "subRole": "Bruiser",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 5,
-    "speed": 3,
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -202,12 +152,7 @@
   "lana": {
     "id": "lana",
     "name": "Lana",
-    "role": "DPS",
     "subRole": "Striker",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -222,12 +167,7 @@
   "keene": {
     "id": "keene",
     "name": "Keene",
-    "role": "Support",
     "subRole": "Leader",
-    "maxHP": 3,
-    "attack": 3,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "attack_buff",
       "clarity_pulse",
@@ -242,12 +182,7 @@
   "lucretia": {
     "id": "lucretia",
     "name": "Lucretia",
-    "role": "Tank",
     "subRole": "Warden",
-    "maxHP": 4,
-    "attack": 3,
-    "defense": 5,
-    "speed": 2,
     "abilities": [
       "shield_wall",
       "brace",
@@ -262,12 +197,7 @@
   "tiger": {
     "id": "tiger",
     "name": "Tiger",
-    "role": "DPS",
     "subRole": "Berserker",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 2,
-    "speed": 3,
     "abilities": [
       "piercing_thrust",
       "flanking_strike",
@@ -282,12 +212,7 @@
   "marvin": {
     "id": "marvin",
     "name": "Marvin",
-    "role": "Support",
     "subRole": "Healer",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 3,
-    "speed": 3,
     "abilities": [
       "comforting_heal",
       "protective_shield",
@@ -302,12 +227,7 @@
   "itsuki": {
     "id": "itsuki",
     "name": "Itsuki",
-    "role": "Tank",
     "subRole": "Defender",
-    "maxHP": 4,
-    "attack": 3,
-    "defense": 5,
-    "speed": 3,
     "abilities": [
       "shield_bash",
       "shield_wall",
@@ -322,12 +242,7 @@
   "steve": {
     "id": "steve",
     "name": "Delusional Steve",
-    "role": "DPS",
     "subRole": "Caster",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 2,
-    "speed": 3,
     "abilities": [
       "quick_cut",
       "ricochet_shot",
@@ -342,12 +257,7 @@
   "karishad": {
     "id": "karishad",
     "name": "Karishad",
-    "role": "Support",
     "subRole": "Trickster",
-    "maxHP": 3,
-    "attack": 3,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "lane_swap",
       "speed_sap",
@@ -362,12 +272,7 @@
   "mungo": {
     "id": "mungo",
     "name": "Mungo",
-    "role": "Tank",
     "subRole": "Bruiser",
-    "maxHP": 4,
-    "attack": 5,
-    "defense": 4,
-    "speed": 3,
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -382,12 +287,7 @@
   "fox": {
     "id": "fox",
     "name": "Fox",
-    "role": "DPS",
     "subRole": "Striker",
-    "maxHP": 3,
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -402,12 +302,7 @@
   "bino": {
     "id": "bino",
     "name": "Bino",
-    "role": "Support",
     "subRole": "Debuffer",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "speed_sap",
       "hex_mist",
@@ -422,12 +317,7 @@
   "rex": {
     "id": "rex",
     "name": "Rex",
-    "role": "Tank",
     "subRole": "Vanguard",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 5,
-    "speed": 3,
     "abilities": [
       "shield_bash",
       "brace",
@@ -442,12 +332,7 @@
   "tarot": {
     "id": "tarot",
     "name": "Tarot",
-    "role": "DPS",
     "subRole": "Caster",
-    "maxHP": 3,
-    "attack": 4,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "lane_shot",
       "ricochet_shot",
@@ -462,12 +347,7 @@
   "sabrina": {
     "id": "sabrina",
     "name": "Sabrina",
-    "role": "Support",
     "subRole": "Healer",
-    "maxHP": 3,
-    "attack": 3,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "comforting_heal",
       "speed_sap",
@@ -482,12 +362,7 @@
   "fido": {
     "id": "fido",
     "name": "Fido",
-    "role": "Tank",
     "subRole": "BruiserTank",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 3,
-    "speed": 2,
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -502,12 +377,7 @@
   "natalie": {
     "id": "natalie",
     "name": "Natalie",
-    "role": "DPS",
     "subRole": "Skirmisher",
-    "maxHP": 3,
-    "attack": 4,
-    "defense": 2,
-    "speed": 3,
     "abilities": [
       "dash_strike",
       "quick_cut",
@@ -522,12 +392,7 @@
   "zach": {
     "id": "zach",
     "name": "Zach",
-    "role": "Support",
     "subRole": "SpiritGuide",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 3,
-    "speed": 3,
     "abilities": [
       "warm_heal",
       "clarity_pulse",
@@ -539,12 +404,7 @@
   "ptah": {
     "id": "ptah",
     "name": "Ptah",
-    "role": "Tank",
     "subRole": "Warden",
-    "maxHP": 4,
-    "attack": 4,
-    "defense": 5,
-    "speed": 3,
     "abilities": [
       "brace",
       "shield_wall",
@@ -559,12 +419,7 @@
   "rufus": {
     "id": "rufus",
     "name": "Rufus",
-    "role": "DPS",
     "subRole": "Bruiser",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 3,
-    "speed": 3,
     "abilities": [
       "quick_cut",
       "piercing_thrust",
@@ -579,12 +434,7 @@
   "breel": {
     "id": "breel",
     "name": "Breel",
-    "role": "Support",
     "subRole": "Healer",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 3,
-    "speed": 3,
     "abilities": [
       "comforting_heal",
       "protective_shield",
@@ -599,12 +449,7 @@
   "kevin": {
     "id": "kevin",
     "name": "Kevin",
-    "role": "Tank",
     "subRole": "Bruiser",
-    "maxHP": 4,
-    "attack": 5,
-    "defense": 4,
-    "speed": 3,
     "abilities": [
       "shield_bash",
       "guard_slam",
@@ -619,12 +464,7 @@
   "gale": {
     "id": "gale",
     "name": "Gale",
-    "role": "DPS",
     "subRole": "Berserker",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -639,12 +479,7 @@
   "jessica": {
     "id": "jessica",
     "name": "Jessica",
-    "role": "Support",
     "subRole": "Trickster",
-    "maxHP": 3,
-    "attack": 3,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "lane_swap",
       "hex_mist",
@@ -659,12 +494,7 @@
   "dallas": {
     "id": "dallas",
     "name": "Dallas",
-    "role": "Tank",
     "subRole": "Defender",
-    "maxHP": 4,
-    "attack": 3,
-    "defense": 4,
-    "speed": 3,
     "abilities": [
       "shield_wall",
       "brace",
@@ -679,12 +509,7 @@
   "lester": {
     "id": "lester",
     "name": "Lester",
-    "role": "DPS",
     "subRole": "Striker",
-    "maxHP": 3,
-    "attack": 5,
-    "defense": 3,
-    "speed": 4,
     "abilities": [
       "quick_cut",
       "dash_strike",
@@ -699,12 +524,7 @@
   "joey": {
     "id": "joey",
     "name": "Joey",
-    "role": "Support",
     "subRole": "ArcaneController",
-    "maxHP": 3,
-    "attack": 2,
-    "defense": 2,
-    "speed": 4,
     "abilities": [
       "speed_sap",
       "hex_mist",
