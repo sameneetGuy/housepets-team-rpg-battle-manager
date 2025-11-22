@@ -6,11 +6,10 @@ import {
   getCupStageName,
   getLeagueChampionIndex
 } from "../season/season_manager.js";
+import { getFighterValue } from "../season/trades.js";
 import { renderTradeUI } from "./trade_ui.js";
 
 export function renderAll() {
-  renderParticipants();
-  renderTeamsTitles();
   renderLeague();
   renderPlayoffs();
   renderCup();
@@ -18,6 +17,8 @@ export function renderAll() {
   renderDayLabel();
   renderSeasonMeta();
   renderTradeUI();
+  renderTeamsOverview();
+  renderFightersDirectory();
 }
 
 function renderDayLabel() {
@@ -43,74 +44,6 @@ function renderSeasonMeta() {
     <div class="meta-title">Season ${season} Meta: ${meta.name}</div>
     <div class="meta-desc">${meta.description}</div>
   `;
-}
-
-function renderParticipants() {
-  const div = document.getElementById("participants-list");
-  if (!div) return;
-
-  const fighters = Object.values(GAME.fighters);
-  fighters.sort((a, b) => a.name.localeCompare(b.name));
-
-  let html = `<div><strong>Season ${GAME.seasonNumber || 1}</strong></div>`;
-  html += `<table>
-    <thead>
-      <tr>
-        <th>Fighter</th>
-        <th>League Titles</th>
-        <th>Cup Titles</th>
-        <th>Super Cup Titles</th>
-      </tr>
-    </thead>
-    <tbody>`;
-
-  for (const f of fighters) {
-    html += `<tr>
-      <td>${f.name}</td>
-      <td>${f.leagueTitles || 0}</td>
-      <td>${f.cupTitles || 0}</td>
-      <td>${f.superCupTitles || 0}</td>
-    </tr>`;
-  }
-
-  html += `</tbody></table>`;
-  div.innerHTML = html;
-}
-
-function renderTeamsTitles() {
-  const div = document.getElementById("teams-titles-list");
-  if (!div) return;
-
-  const teams = GAME.teams || [];
-
-  let html = `<table>
-    <thead>
-      <tr>
-        <th>Team</th>
-        <th>League Titles</th>
-        <th>Cup Titles</th>
-        <th>Super Cup Titles</th>
-      </tr>
-    </thead>
-    <tbody>
-  `;
-
-  teams
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .forEach((t) => {
-      html += `
-        <tr>
-          <td>${t.name}</td>
-          <td>${t.leagueTitles || 0}</td>
-          <td>${t.cupTitles || 0}</td>
-          <td>${t.superCupTitles || 0}</td>
-        </tr>
-      `;
-    });
-
-  html += `</tbody></table>`;
-  div.innerHTML = html;
 }
 
 function renderLeague() {
@@ -196,6 +129,102 @@ function renderPlayoffs() {
   }
 
   statusDiv.innerHTML = parts.join("");
+}
+
+function renderTeamsOverview() {
+  const container = document.getElementById("teams-overview");
+  if (!container) return;
+
+  const teams = (GAME.teams || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  const rows = teams
+    .map((team) => {
+      const rosterByRole = { Tank: [], DPS: [], Support: [] };
+      for (const fid of team.fighterIds || []) {
+        const fighter = GAME.fighters?.[fid];
+        if (fighter && rosterByRole[fighter.role]) {
+          rosterByRole[fighter.role].push(fighter.name);
+        }
+      }
+
+      const roleCell = (role) => (rosterByRole[role].length ? rosterByRole[role].join(", ") : "—");
+
+      return `<tr>
+        <td>
+          <div><strong>${team.name}</strong></div>
+          <div style="color:#9bb4ff; font-size:0.85rem;">${team.conference}</div>
+        </td>
+        <td>${roleCell("Tank")}</td>
+        <td>${roleCell("DPS")}</td>
+        <td>${roleCell("Support")}</td>
+        <td>${team.leagueTitles || 0}</td>
+        <td>${team.cupTitles || 0}</td>
+        <td>${team.superCupTitles || 0}</td>
+      </tr>`;
+    })
+    .join("");
+
+  container.innerHTML = `<table>
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Tank</th>
+        <th>DPS</th>
+        <th>Support</th>
+        <th>League Titles</th>
+        <th>Cup Titles</th>
+        <th>Super Cup Titles</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderFightersDirectory() {
+  const container = document.getElementById("fighters-directory");
+  if (!container) return;
+
+  const fighters = Object.values(GAME.fighters || {}).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const teams = GAME.teams || [];
+
+  const rows = fighters
+    .map((fighter) => {
+      const team = teams.find((t) => t.fighterIds.includes(fighter.id));
+      const value = getFighterValue(fighter);
+      return `<tr>
+        <td><strong>${fighter.name}</strong></td>
+        <td>${fighter.role || "?"}</td>
+        <td>${fighter.subRole || "—"}</td>
+        <td>${team?.name || "Unassigned"}</td>
+        <td>${fighter.attack ?? 0}</td>
+        <td>${fighter.defense ?? 0}</td>
+        <td>${fighter.speed ?? 0}</td>
+        <td>${value}</td>
+        <td>${fighter.leagueTitles || 0}</td>
+        <td>${fighter.cupTitles || 0}</td>
+        <td>${fighter.superCupTitles || 0}</td>
+      </tr>`;
+    })
+    .join("");
+
+  container.innerHTML = `<table>
+    <thead>
+      <tr>
+        <th>Fighter</th>
+        <th>Role</th>
+        <th>Sub-role</th>
+        <th>Team</th>
+        <th>ATK</th>
+        <th>DEF</th>
+        <th>SPD</th>
+        <th>Value</th>
+        <th>League Titles</th>
+        <th>Cup Titles</th>
+        <th>Super Cup Titles</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 function renderCup() {

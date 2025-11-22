@@ -1,6 +1,11 @@
 // js/ui/ui_events.js
 
 import { GAME } from "../core/state.js";
+import {
+  allTeamsCompletedOffseasonTradeRequirement,
+  autoResolveOffseasonTrades,
+  ensureOffseasonTradeTracking
+} from "../season/trades.js";
 
 /**
  * Wire up UI events: start season, next day, and calendar log toggling.
@@ -55,6 +60,13 @@ export function setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl 
       setStatus("Simulating 50 seasons…");
 
       for (let i = 0; i < 50; i++) {
+        if (GAME.seasonPhase === "offseason") {
+          ensureOffseasonTradeTracking();
+          if (!allTeamsCompletedOffseasonTradeRequirement()) {
+            autoResolveOffseasonTrades();
+          }
+        }
+
         const startResult = startNewSeason({ autoResolveOffseason: true });
         if (!startResult?.ok) {
           setStatus(startResult?.reason || "Simulation blocked.");
