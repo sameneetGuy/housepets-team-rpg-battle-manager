@@ -137,7 +137,7 @@
   "miles": {
     "id": "miles",
     "name": "Miles",
-    "subRole": "Bruiser",
+    "subRole": "BruiserTank",
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -272,7 +272,7 @@
   "mungo": {
     "id": "mungo",
     "name": "Mungo",
-    "subRole": "Bruiser",
+    "subRole": "BruiserTank",
     "abilities": [
       "guard_slam",
       "shield_bash",
@@ -449,7 +449,7 @@
   "kevin": {
     "id": "kevin",
     "name": "Kevin",
-    "subRole": "Bruiser",
+    "subRole": "BruiserTank",
     "abilities": [
       "shield_bash",
       "guard_slam",
