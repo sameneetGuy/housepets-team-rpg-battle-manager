@@ -16,7 +16,7 @@ export function compareTeamsByStandings(a, b) {
 
 // Base team definitions: 12 teams, 3 fighters each, built around formation
 // (frontliner + mid dps/trickster + backline mage/support where possible)
-const BASE_TEAMS = [
+export const BASE_TEAMS = [
   {
     id: "babylon_knights",
     name: "Babylon Knights",

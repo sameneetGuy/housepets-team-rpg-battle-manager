@@ -6,6 +6,7 @@ import { startNewSeason, advanceDay } from "./season/season_manager.js";
 import { renderAll } from "./ui/render.js";
 import { setupUIEvents } from "./ui/ui_events.js";
 import { setupTabs } from "./ui/tabs.js";
+import { setupTradeUI } from "./ui/trade_ui.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const statusEl = document.getElementById("app-status");
@@ -33,6 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   ensureInitialTeams();
   renderAll(); // initial render (no season yet)
+  setupTradeUI({ renderAll });
   setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl });
 
   if (startBtn) startBtn.disabled = false;

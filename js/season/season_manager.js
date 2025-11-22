@@ -8,6 +8,12 @@ import {
 } from "./teams.js";
 import { rollSeasonMetaTrend, setSeasonMetaTrend } from "./meta_trends.js";
 import { simulateTeamBattle, simulateTeamSeries } from "../battle/battle_2x3.js";
+import {
+  allTeamsCompletedOffseasonTradeRequirement,
+  autoResolveOffseasonTrades,
+  enterOffseason,
+  ensureOffseasonTradeTracking
+} from "./trades.js";
 
 /**
  * Generate a single round-robin schedule for N teams.
@@ -540,7 +546,25 @@ function getLeagueRunnerUpIndex() {
  * Start (or restart) a season.
  * Keeps teams and fighter title history; resets league/cup/supercup state.
  */
-export function startNewSeason() {
+export function startNewSeason(options = {}) {
+  const { autoResolveOffseason = false } = options;
+
+  if (GAME.seasonPhase === "offseason" && GAME._seasonStartedBefore) {
+    ensureOffseasonTradeTracking();
+    if (!allTeamsCompletedOffseasonTradeRequirement()) {
+      if (autoResolveOffseason) {
+        autoResolveOffseasonTrades();
+      }
+
+      if (!allTeamsCompletedOffseasonTradeRequirement()) {
+        return {
+          ok: false,
+          reason: "All teams must complete at least one trade before the new season begins."
+        };
+      }
+    }
+  }
+
   // Increment season number before applying meta so history records correctly.
   if (GAME._seasonStartedBefore) {
     GAME.seasonNumber = (GAME.seasonNumber || 1) + 1;
@@ -571,11 +595,14 @@ export function startNewSeason() {
   GAME.calendar = [];
   GAME.dayNumber = 1;
   GAME.seasonComplete = false;
+  GAME.seasonPhase = "regular";
 
   // Roll a new seasonal meta trend and record it for history/AI use.
   setSeasonMetaTrend(rollSeasonMetaTrend());
 
   GAME._seasonStartedBefore = true;
+
+  return { ok: true };
 }
 
 /**
@@ -589,6 +616,9 @@ export function startNewSeason() {
  */
 export function advanceDay() {
   if (GAME.seasonComplete) {
+    if (GAME.seasonPhase !== "offseason") {
+      enterOffseason();
+    }
     return { status: "finished", phase: "Off-season", shortLabel: "Season finished" };
   }
 
@@ -600,6 +630,7 @@ export function advanceDay() {
 
   // 1) League phase
   if (!GAME.league.finished) {
+    GAME.seasonPhase = "regular";
     phase = "League";
     shortLabel = `League Round ${GAME.league.day + 1}`;
     const res = simulateLeagueDay();
@@ -609,6 +640,7 @@ export function advanceDay() {
   }
   // 2) Playoff phase
   else if (!GAME.playoffs.finished) {
+    GAME.seasonPhase = "playoffs";
     if (GAME.playoffs.round === 0 && GAME.playoffs.matches.length === 0) {
       GAME.playoffs.matches = buildPlayoffPairs();
     }
@@ -622,6 +654,7 @@ export function advanceDay() {
   }
   // 3) Cup phase
   else if (!GAME.cup.finished) {
+    GAME.seasonPhase = "playoffs";
     if (GAME.cup.round === 0 && GAME.cup.matches.length === 0) {
       GAME.cup.matches = initialCupPairs();
     }
@@ -634,6 +667,7 @@ export function advanceDay() {
   }
   // 4) Super Cup
   else if (GAME.supercup && !GAME.supercup.played) {
+    GAME.seasonPhase = "playoffs";
     phase = "Super Cup";
     shortLabel = "Super Cup Match";
     const res = simulateSuperCup();
@@ -646,7 +680,11 @@ export function advanceDay() {
     log = `${log}\n${finishSummary}\n`;
     status = "finished";
     GAME.seasonComplete = true;
+    enterOffseason();
   } else {
+    if (GAME.seasonPhase !== "offseason") {
+      enterOffseason();
+    }
     phase = "Off-season";
     shortLabel = "Season finished";
     log = "Season finished. Start a new season to continue.\n";
