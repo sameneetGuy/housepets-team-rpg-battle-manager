@@ -61,10 +61,6 @@
       cursor: default;
     }
 
-    #participants-list {
-      font-size: 0.9rem;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -139,16 +135,6 @@
       max-height: 200px;
       overflow-y: auto;
       white-space: pre-wrap;
-    }
-
-    .participants-row {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    .participants-column {
-      flex: 1;
     }
 
     .supercup-panel {
@@ -248,6 +234,86 @@
       font-size: 0.85rem;
     }
 
+    .trade-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .trade-column label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .trade-select {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding: 0.45rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #111;
+      color: #eee;
+    }
+
+    .trade-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    .trade-result {
+      min-height: 1.2rem;
+      margin-top: 0.35rem;
+      font-weight: 600;
+    }
+
+    .trade-error {
+      color: #ffbdbd;
+    }
+
+    .trade-success {
+      color: #9be5c4;
+    }
+
+    .requirement-summary {
+      padding: 0.5rem 0.65rem;
+      border-radius: 4px;
+      margin-bottom: 0.35rem;
+    }
+
+    .requirement-summary.pending {
+      background: #2a1d1d;
+      border: 1px solid #7f3d3d;
+      color: #ffbdbd;
+    }
+
+    .requirement-summary.ok {
+      background: #1d2a1d;
+      border: 1px solid #3d7f4c;
+      color: #b7ffd5;
+    }
+
+    .trade-progress-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.35rem;
+    }
+
+    .trade-progress-list li {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 0.45rem;
+      font-size: 0.9rem;
+    }
+
     @media (max-width: 900px) {
       .tab-grid {
         grid-template-columns: 1fr;
@@ -273,7 +339,9 @@
       <button class="tab-button" id="tab-logs-btn" role="tab" aria-selected="true" aria-controls="tab-logs" data-tab-target="tab-logs">Logs</button>
       <button class="tab-button" id="tab-leagues-btn" role="tab" aria-selected="false" aria-controls="tab-leagues" data-tab-target="tab-leagues">Leagues</button>
       <button class="tab-button" id="tab-cups-btn" role="tab" aria-selected="false" aria-controls="tab-cups" data-tab-target="tab-cups">Cups</button>
-      <button class="tab-button" id="tab-participants-btn" role="tab" aria-selected="false" aria-controls="tab-participants" data-tab-target="tab-participants">Participants</button>
+      <button class="tab-button" id="tab-offseason-btn" role="tab" aria-selected="false" aria-controls="tab-offseason" data-tab-target="tab-offseason">Offseason</button>
+      <button class="tab-button" id="tab-teams-btn" role="tab" aria-selected="false" aria-controls="tab-teams" data-tab-target="tab-teams">Teams</button>
+      <button class="tab-button" id="tab-fighters-btn" role="tab" aria-selected="false" aria-controls="tab-fighters" data-tab-target="tab-fighters">Fighters</button>
     </div>
 
     <section id="tab-logs" class="tab-panel active" role="tabpanel" aria-labelledby="tab-logs-btn">
@@ -346,19 +414,53 @@
       </div>
     </section>
 
-    <section id="tab-participants" class="tab-panel" role="tabpanel" aria-labelledby="tab-participants-btn">
-      <div id="participants-panel" class="panel">
-        <h2>Participants</h2>
-        <div class="participants-row">
-          <div class="participants-column">
-            <h3>Fighters</h3>
-            <div id="participants-list"></div>
+    <section id="tab-offseason" class="tab-panel" role="tabpanel" aria-labelledby="tab-offseason-btn">
+      <div class="stacked-panels">
+        <div id="trade-panel" class="panel">
+          <h3>Offseason Trade Desk</h3>
+          <p id="offseason-only-note" style="margin-top:0; color:#bbb;">Trades are only allowed in the offseason window.</p>
+          <div class="trade-grid">
+            <div class="trade-column">
+              <label for="trade-team-a">Team A</label>
+              <select id="trade-team-a" class="trade-select"></select>
+              <label for="trade-fighter-a">Fighter A</label>
+              <select id="trade-fighter-a" class="trade-select"></select>
+            </div>
+            <div class="trade-column">
+              <label for="trade-team-b">Team B</label>
+              <select id="trade-team-b" class="trade-select"></select>
+              <label for="trade-fighter-b">Fighter B</label>
+              <select id="trade-fighter-b" class="trade-select"></select>
+            </div>
           </div>
-          <div class="participants-column">
-            <h3>Teams Titles</h3>
-            <div id="teams-titles-list"></div>
+          <div class="trade-actions">
+            <button id="propose-trade-btn">Propose Trade</button>
+            <button id="auto-resolve-trades-btn">Auto-Resolve Offseason Trades</button>
           </div>
+          <div id="trade-result" class="trade-result"></div>
         </div>
+
+        <div class="panel">
+          <h3>Offseason Progress</h3>
+          <p style="margin-top:0; color:#bbb;">Each team must complete at least one trade before starting the new season.</p>
+          <div id="trade-requirement-banner"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-teams" class="tab-panel" role="tabpanel" aria-labelledby="tab-teams-btn">
+      <div class="panel">
+        <h2>Teams & Rosters</h2>
+        <p style="margin-top:0; color:#bbb;">Current compositions with title history.</p>
+        <div id="teams-overview"></div>
+      </div>
+    </section>
+
+    <section id="tab-fighters" class="tab-panel" role="tabpanel" aria-labelledby="tab-fighters-btn">
+      <div class="panel">
+        <h2>Fighter Directory</h2>
+        <p style="margin-top:0; color:#bbb;">Roles, stats, and titles for every fighter in the league.</p>
+        <div id="fighters-directory"></div>
       </div>
     </section>
   </div>

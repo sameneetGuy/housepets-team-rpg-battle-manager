@@ -43,6 +43,11 @@ export const GAME = {
   // Season tracking
   seasonNumber: 1,
   seasonComplete: false,
+  seasonPhase: "offseason", // "regular" | "playoffs" | "offseason"
+
+  // Offseason tracking
+  lastSeasonRosters: {},
+  offseasonTradesCount: {},
 
   // Seasonal meta trend (e.g., AoE-friendly, defensive)
   metaTrend: null,
