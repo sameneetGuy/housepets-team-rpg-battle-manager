@@ -168,6 +168,10 @@ function dealDamage(state, source, targetRef, amount, log) {
   state.flags.interrupted[targetRef.id] = true;
   if (target.hp === 0) {
     log.push(`${target.name} is KO'd!`);
+    const slot = targetRef.index != null ? targetRef.index : findPosition(targetTeam, targetRef.id);
+    if (slot != null) {
+      targetTeam.grid[slot] = null;
+    }
   }
 }
 
