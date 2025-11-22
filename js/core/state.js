@@ -4,6 +4,9 @@ export const GAME = {
   // All fighters loaded from fighters.json
   fighters: {},
 
+  // Subrole templates loaded from subroles.json
+  subroles: {},
+
   // Universal abilities loaded from abilities_2x3.json
   abilities: [],
   abilityMap: {},

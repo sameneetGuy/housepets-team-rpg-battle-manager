@@ -8,11 +8,13 @@ import { GAME } from "./state.js";
  */
 export async function loadFighters() {
   let fighterResponse;
+  let subroleResponse;
   let abilityResponse;
 
   try {
-    [fighterResponse, abilityResponse] = await Promise.all([
+    [fighterResponse, subroleResponse, abilityResponse] = await Promise.all([
       fetch("fighters.json"),
+      fetch("subroles.json"),
       fetch("abilities_2x3.json"),
     ]);
   } catch (err) {
@@ -27,8 +29,13 @@ export async function loadFighters() {
     throw new Error(`Failed to load abilities_2x3.json: ${abilityResponse?.status}`);
   }
 
+  if (!subroleResponse?.ok) {
+    throw new Error(`Failed to load subroles.json: ${subroleResponse?.status}`);
+  }
+
   let fightersJson;
   let abilitiesJson;
+  let subrolesJson;
   try {
     fightersJson = await fighterResponse.json();
   } catch (err) {
@@ -41,8 +48,17 @@ export async function loadFighters() {
     throw new Error(`Invalid abilities_2x3.json: ${err.message}`);
   }
 
+  try {
+    subrolesJson = await subroleResponse.json();
+  } catch (err) {
+    throw new Error(`Invalid subroles.json: ${err.message}`);
+  }
+
   // Store raw fighters
   GAME.fighters = fightersJson;
+
+  // Store subrole templates
+  GAME.subroles = subrolesJson;
 
   // Stable order of fighters (by id)
   GAME.fighterOrder = Object.keys(fightersJson);
@@ -59,6 +75,20 @@ export async function loadFighters() {
   // Normalize fighter fields
   for (const fid of GAME.fighterOrder) {
     const f = GAME.fighters[fid];
+
+    const subroleStats = GAME.subroles?.[f.subRole];
+
+    if (subroleStats) {
+      f.role = subroleStats.role;
+      f.attack = subroleStats.attack;
+      f.defense = subroleStats.defense;
+      f.speed = subroleStats.speed;
+    } else {
+      // Fallback to existing fighter values when subrole is missing
+      f.attack = typeof f.attack === "number" ? f.attack : 3;
+      f.defense = typeof f.defense === "number" ? f.defense : 3;
+      f.speed = typeof f.speed === "number" ? f.speed : 3;
+    }
 
     // Ensure title stats exist (for multi-season tracking)
     f.leagueTitles = f.leagueTitles || 0;
