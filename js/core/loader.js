@@ -79,10 +79,10 @@ export async function loadFighters() {
     const subroleStats = GAME.subroles?.[f.subRole];
 
     if (subroleStats) {
-      f.role = subroleStats.role;
-      f.attack = subroleStats.attack;
-      f.defense = subroleStats.defense;
-      f.speed = subroleStats.speed;
+      f.role = subroleStats.role ?? f.role;
+      f.attack = typeof f.attack === "number" ? f.attack : subroleStats.attack;
+      f.defense = typeof f.defense === "number" ? f.defense : subroleStats.defense;
+      f.speed = typeof f.speed === "number" ? f.speed : subroleStats.speed;
     } else {
       // Fallback to existing fighter values when subrole is missing
       f.attack = typeof f.attack === "number" ? f.attack : 3;
