@@ -41,18 +41,16 @@ def get_script_dir() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def load_fighters_json() -> Dict[str, Any]:
+def load_json_dict(filename: str) -> Dict[str, Any]:
     """
-    Load fighters.json from the same directory as this script.
-
-    Returns a dict: { fighter_id: fighter_data, ... }
+    Load a JSON file expected to contain an object at the top level.
     """
     script_dir = get_script_dir()
-    json_path = os.path.join(script_dir, "fighters.json")
+    json_path = os.path.join(script_dir, filename)
 
     if not os.path.isfile(json_path):
         raise FileNotFoundError(
-            f"fighters.json not found in: {script_dir}\n"
+            f"{filename} not found in: {script_dir}\n"
             f"Expected file at: {json_path}"
         )
 
@@ -60,9 +58,41 @@ def load_fighters_json() -> Dict[str, Any]:
         data = json.load(f)
 
     if not isinstance(data, dict):
-        raise ValueError("fighters.json must contain a JSON object at the top level.")
+        raise ValueError(f"{filename} must contain a JSON object at the top level.")
 
     return data
+
+
+def load_fighters_json() -> Dict[str, Any]:
+    """
+    Load fighters.json from the same directory as this script.
+
+    Returns a dict: { fighter_id: fighter_data, ... }
+    """
+    return load_json_dict("fighters.json")
+
+
+def load_subroles_json() -> Dict[str, Any]:
+    """Load subroles.json from the same directory as this script."""
+    return load_json_dict("subroles.json")
+
+
+def apply_subrole_stats(
+    fighters: Dict[str, Any], subroles: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Populate attack/defense/speed/role on fighters using their subRole template.
+    """
+    for fdata in fighters.values():
+        subrole = str(fdata.get("subRole", "") or "")
+        subrole_stats = subroles.get(subrole, {}) if isinstance(subroles, dict) else {}
+
+        fdata["role"] = fdata.get("role") or subrole_stats.get("role", "")
+        fdata["attack"] = int(fdata.get("attack", subrole_stats.get("attack", 0)))
+        fdata["defense"] = int(fdata.get("defense", subrole_stats.get("defense", 0)))
+        fdata["speed"] = int(fdata.get("speed", subrole_stats.get("speed", 0)))
+
+    return fighters
 
 
 def get_subrole_bonus(subrole: str) -> int:
@@ -146,10 +176,12 @@ def print_value_table(rows: List[Tuple[str, Dict[str, Any], int]]) -> None:
 def main() -> None:
     try:
         fighters = load_fighters_json()
+        subroles = load_subroles_json()
     except (FileNotFoundError, ValueError) as e:
         print(f"[ERROR] {e}")
         return
 
+    fighters = apply_subrole_stats(fighters, subroles)
     rows = build_value_table(fighters)
     print_value_table(rows)
 
