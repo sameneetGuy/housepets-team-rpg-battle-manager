@@ -4,6 +4,10 @@ export const GAME = {
   // All fighters loaded from fighters.json
   fighters: {},
 
+  // Universal abilities loaded from abilities_2x3.json
+  abilities: [],
+  abilityMap: {},
+
   // Stable order of fighter ids (useful for tables / loops)
   fighterOrder: [],
 

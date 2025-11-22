@@ -1,0 +1,605 @@
+// js/battle/battle_2x3.js
+// New 2×3 esports battle engine built for the universal ability list.
+
+import { GAME } from "../core/state.js";
+
+const POSITIONS = ["FL", "FC", "FR", "BL", "BC", "BR"];
+const BUFF_CAP = 3;
+const STAT_CAP = 8;
+
+function indexToCoord(idx) {
+  const row = idx < 3 ? 0 : 1;
+  const col = idx % 3;
+  return { row, col };
+}
+
+function coordToIndex(row, col) {
+  return row * 3 + col;
+}
+
+function randomChoice(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function createFighterInstance(base) {
+  return {
+    ...base,
+    hp: base.maxHP,
+    buffs: [],
+    debuffs: [],
+    shieldValue: 0,
+    shieldDuration: 0,
+    cooldowns: {},
+    usedUltimate: false,
+  };
+}
+
+function createTeamState(fighters) {
+  const grid = Array(6).fill(null);
+  const fighterMap = {};
+  fighters.forEach((f, idx) => {
+    const instance = createFighterInstance(f);
+    const pos = idx < 3 ? idx : 3 + (idx - 3);
+    grid[pos] = instance.id;
+    fighterMap[instance.id] = instance;
+  });
+  return { fighters: fighterMap, grid };
+}
+
+function getTeamKey(ref) {
+  return ref.team === "A" ? "teamA" : "teamB";
+}
+
+function getEnemyKey(ref) {
+  return ref.team === "A" ? "teamB" : "teamA";
+}
+
+function findPosition(teamState, fighterId) {
+  const idx = teamState.grid.indexOf(fighterId);
+  return idx >= 0 ? idx : null;
+}
+
+function getPositionOfFighter(state, fighterId) {
+  const idxA = findPosition(state.teamA, fighterId);
+  if (idxA != null) return { team: "A", index: idxA, ...indexToCoord(idxA) };
+  const idxB = findPosition(state.teamB, fighterId);
+  if (idxB != null) return { team: "B", index: idxB, ...indexToCoord(idxB) };
+  return null;
+}
+
+function getFighter(state, ref) {
+  const teamState = ref.team === "A" ? state.teamA : state.teamB;
+  return teamState.fighters[ref.id] || null;
+}
+
+function isAlive(f) {
+  return f && f.hp > 0;
+}
+
+function statModifierTotal(fighter, stat) {
+  let total = 0;
+  for (const buff of fighter.buffs) {
+    if (buff.stat === stat) total += buff.amount || 0;
+  }
+  for (const debuff of fighter.debuffs) {
+    if (debuff.stat === stat) total += debuff.amount || 0;
+  }
+  return Math.max(-BUFF_CAP, Math.min(BUFF_CAP, total));
+}
+
+function getEffectiveStat(fighter, stat) {
+  const base = fighter[stat] || 0;
+  const mod = statModifierTotal(fighter, stat);
+  const total = Math.max(0, Math.min(STAT_CAP, base + mod));
+  return total;
+}
+
+function applyBuffs(target, buffArray) {
+  if (!Array.isArray(buffArray)) return;
+  for (const buff of buffArray) {
+    if (buff?.stat && typeof buff.amount === "number") {
+      target.buffs.push({ ...buff });
+    }
+  }
+}
+
+function applyDebuffs(target, debuffArray) {
+  if (!Array.isArray(debuffArray)) return;
+  for (const debuff of debuffArray) {
+    if (debuff?.stat && typeof debuff.amount === "number") {
+      target.debuffs.push({ ...debuff });
+    }
+  }
+}
+
+function tickEffects(teamState) {
+  for (const fighterId of Object.keys(teamState.fighters)) {
+    const f = teamState.fighters[fighterId];
+    f.buffs = f.buffs
+      .map((b) => ({ ...b, duration: (b.duration || 1) - 1 }))
+      .filter((b) => (b.duration || 0) > 0);
+    f.debuffs = f.debuffs
+      .map((d) => ({ ...d, duration: (d.duration || 1) - 1 }))
+      .filter((d) => (d.duration || 0) > 0);
+  }
+}
+
+function applyShield(target, amount) {
+  if (amount <= 0) return;
+  target.shieldValue = Math.max(target.shieldValue, amount);
+  target.shieldDuration = 1; // lasts until the start of the target's next turn
+}
+
+function applyHeal(source, target, amount, log) {
+  if (!isAlive(target)) return;
+  const before = target.hp;
+  target.hp = Math.min(target.maxHP, target.hp + amount);
+  const healed = target.hp - before;
+  if (healed > 0) {
+    log.push(`${source.name} heals ${target.name} for ${healed} HP.`);
+  }
+}
+
+function dealDamage(state, source, targetRef, amount, log) {
+  const targetTeam = targetRef.team === "A" ? state.teamA : state.teamB;
+  const target = targetTeam.fighters[targetRef.id];
+  if (!isAlive(target)) return;
+
+  if (target.shieldValue > 0) {
+    target.shieldValue = Math.max(0, target.shieldValue - amount);
+    target.shieldDuration = 0;
+    log.push(`${source.name} hits ${target.name}, but a shield blocks the damage.`);
+    state.flags.interrupted[targetRef.id] = true;
+    return;
+  }
+
+  target.hp = Math.max(0, target.hp - amount);
+  log.push(`${source.name} hits ${target.name} for ${amount} damage.`);
+  state.flags.interrupted[targetRef.id] = true;
+  if (target.hp === 0) {
+    log.push(`${target.name} is KO'd!`);
+  }
+}
+
+function tickShield(fighter) {
+  if (fighter.shieldDuration > 0) {
+    fighter.shieldDuration -= 1;
+    if (fighter.shieldDuration <= 0) {
+      fighter.shieldValue = 0;
+    }
+  }
+}
+
+function setPosition(teamState, idx, fighterId) {
+  const currentIndex = findPosition(teamState, fighterId);
+  if (currentIndex != null) {
+    teamState.grid[currentIndex] = null;
+  }
+  teamState.grid[idx] = fighterId;
+}
+
+function getAdjacentEmptyPositions(teamState, idx) {
+  const { row, col } = indexToCoord(idx);
+  const moves = [];
+  for (let r = Math.max(0, row - 1); r <= Math.min(1, row + 1); r++) {
+    for (let c = Math.max(0, col - 1); c <= Math.min(2, col + 1); c++) {
+      if (r === row && c === col) continue;
+      const candidate = coordToIndex(r, c);
+      if (teamState.grid[candidate] == null) moves.push(candidate);
+    }
+  }
+  return moves;
+}
+
+function columnAllowedForProjectile(col, casterCol) {
+  if (casterCol === 1) return true; // center can hit any column
+  if (casterCol === 0) return col <= 1; // left or center
+  if (casterCol === 2) return col >= 1; // right or center
+  return true;
+}
+
+function collectEnemyTargets(state, casterRef, ability) {
+  const enemyTeamKey = getEnemyKey(casterRef);
+  const enemyTeam = enemyTeamKey === "teamA" ? state.teamA : state.teamB;
+  const casterPos = getPositionOfFighter(state, casterRef.id);
+  if (!casterPos) return [];
+
+  const targets = [];
+  const range = ability.range || {};
+
+  if (range.delivery === "projectile") {
+    for (let i = 0; i < enemyTeam.grid.length; i++) {
+      const fid = enemyTeam.grid[i];
+      if (!fid) continue;
+      const fighter = enemyTeam.fighters[fid];
+      if (!isAlive(fighter)) continue;
+      const { col } = indexToCoord(i);
+      if (columnAllowedForProjectile(col, casterPos.col)) {
+        targets.push({ team: enemyTeamKey === "teamA" ? "A" : "B", id: fid, index: i, ...indexToCoord(i) });
+      }
+    }
+    return targets;
+  }
+
+  // melee / support targeting against enemies
+  const allowedCols = new Set([casterPos.col]);
+  if (range.diagonal) {
+    allowedCols.add(Math.max(0, casterPos.col - 1));
+    allowedCols.add(Math.min(2, casterPos.col + 1));
+  }
+
+  const considerBack = range.stepIn === true;
+
+  for (let i = 0; i < enemyTeam.grid.length; i++) {
+    const fid = enemyTeam.grid[i];
+    if (!fid) continue;
+    const fighter = enemyTeam.fighters[fid];
+    if (!isAlive(fighter)) continue;
+    const { row, col } = indexToCoord(i);
+    if (!allowedCols.has(col)) continue;
+
+    if (row === 0) {
+      targets.push({ team: enemyTeamKey === "teamA" ? "A" : "B", id: fid, index: i, row, col });
+    } else if (considerBack) {
+      targets.push({ team: enemyTeamKey === "teamA" ? "A" : "B", id: fid, index: i, row, col });
+    }
+  }
+
+  return targets;
+}
+
+function collectAllyTargets(state, casterRef, ability) {
+  const teamKey = getTeamKey(casterRef);
+  const teamState = teamKey === "teamA" ? state.teamA : state.teamB;
+  const casterPos = getPositionOfFighter(state, casterRef.id);
+  if (!casterPos) return [];
+  const range = ability.range || {};
+
+  if (range.pattern === "team") {
+    return Object.keys(teamState.fighters)
+      .map((id) => ({ team: teamKey === "teamA" ? "A" : "B", id, index: findPosition(teamState, id), ...indexToCoord(findPosition(teamState, id)) }))
+      .filter((ref) => isAlive(teamState.fighters[ref.id]));
+  }
+
+  const allowedCols = new Set();
+  if (range.lanes === "self") {
+    allowedCols.add(casterPos.col);
+  } else if (range.lanes === "same_lane") {
+    allowedCols.add(casterPos.col);
+  } else if (range.lanes === "same_or_adjacent") {
+    allowedCols.add(casterPos.col);
+    allowedCols.add(Math.max(0, casterPos.col - 1));
+    allowedCols.add(Math.min(2, casterPos.col + 1));
+  } else {
+    allowedCols.add(0);
+    allowedCols.add(1);
+    allowedCols.add(2);
+  }
+
+  const refs = [];
+  for (let i = 0; i < teamState.grid.length; i++) {
+    const fid = teamState.grid[i];
+    if (!fid) continue;
+    const fighter = teamState.fighters[fid];
+    if (!isAlive(fighter)) continue;
+    const { col } = indexToCoord(i);
+    if (range.target === "self" && fid !== casterRef.id) continue;
+    if (range.lanes === "self" && fid !== casterRef.id) continue;
+    if (!allowedCols.has(col)) continue;
+    refs.push({ team: teamKey === "teamA" ? "A" : "B", id: fid, index: i, ...indexToCoord(i) });
+  }
+  return refs;
+}
+
+function filterPatternTargets(candidates, casterPos, pattern) {
+  if (pattern === "front_row") {
+    return candidates.filter((t) => t.row === 0);
+  }
+  if (pattern === "column") {
+    return candidates.filter((t) => t.col === casterPos.col);
+  }
+  if (pattern === "cone") {
+    return candidates.filter((t) => t.col >= casterPos.col - 1 && t.col <= casterPos.col + 1 && t.row <= 1);
+  }
+  return candidates;
+}
+
+function selectTargets(state, casterRef, ability, preferredTargetId = null) {
+  const casterPos = getPositionOfFighter(state, casterRef.id);
+  if (!casterPos) return [];
+  const pattern = ability.range?.pattern || "single";
+  let candidates = [];
+
+  if (ability.target === "ally" || ability.target === "self") {
+    candidates = collectAllyTargets(state, casterRef, ability);
+  } else {
+    candidates = collectEnemyTargets(state, casterRef, ability);
+  }
+
+  candidates = filterPatternTargets(candidates, casterPos, pattern);
+
+  if (pattern === "random2") {
+    return shuffle(candidates).slice(0, 2);
+  }
+
+  if (pattern === "team") {
+    return candidates;
+  }
+
+  if (pattern !== "single") {
+    return candidates;
+  }
+
+  if (preferredTargetId) {
+    const found = candidates.find((t) => t.id === preferredTargetId);
+    if (found) return [found];
+  }
+
+  return candidates.length > 0 ? [candidates[0]] : [];
+}
+
+function abilityReady(fighter, ability) {
+  if (!ability) return false;
+  if (ability.oncePerBattle && fighter.usedUltimate && fighter.ultimateId === ability.id) return false;
+  const cd = fighter.cooldowns?.[ability.id] || 0;
+  return cd <= 0;
+}
+
+function reduceCooldowns(fighter) {
+  for (const key of Object.keys(fighter.cooldowns)) {
+    fighter.cooldowns[key] = Math.max(0, (fighter.cooldowns[key] || 0) - 1);
+  }
+}
+
+function applyAbility(state, casterRef, ability, chosenTargetId = null) {
+  const caster = getFighter(state, casterRef);
+  if (!caster) return;
+
+  const targets = selectTargets(state, casterRef, ability, chosenTargetId);
+  if (targets.length === 0) return;
+
+  if (ability.interruptible && state.flags.interrupted[casterRef.id]) {
+    state.log.push(`${caster.name}'s ${ability.name} is interrupted!`);
+    return;
+  }
+
+  const effect = ability.effect || {};
+
+  for (const targetRef of targets) {
+    const teamState = targetRef.team === "A" ? state.teamA : state.teamB;
+    const target = teamState.fighters[targetRef.id];
+    if (!isAlive(target)) continue;
+
+    if (effect.damage) {
+      dealDamage(state, caster, targetRef, effect.damage, state.log);
+    }
+
+    if (effect.heal) {
+      applyHeal(caster, target, effect.heal, state.log);
+    }
+
+    if (effect.shield) {
+      applyShield(target, effect.shield);
+      state.log.push(`${caster.name} shields ${target.name}.`);
+    }
+
+    if (effect.buffs && effect.buffs.length > 0 && ability.target !== "enemy") {
+      applyBuffs(target, effect.buffs);
+      state.log.push(`${caster.name} buffs ${target.name}.`);
+    }
+
+    if (effect.debuffs && effect.debuffs.length > 0 && ability.target !== "ally") {
+      applyDebuffs(target, effect.debuffs);
+      state.log.push(`${caster.name} weakens ${target.name}.`);
+    }
+  }
+
+  if (ability.oncePerBattle && caster.ultimateId === ability.id) {
+    caster.usedUltimate = true;
+  }
+
+  if (ability.cooldown && ability.cooldown > 0) {
+    caster.cooldowns[ability.id] = ability.cooldown;
+  }
+}
+
+function aliveFighters(state) {
+  const list = [];
+  for (const id of Object.keys(state.teamA.fighters)) {
+    if (isAlive(state.teamA.fighters[id])) list.push({ team: "A", id });
+  }
+  for (const id of Object.keys(state.teamB.fighters)) {
+    if (isAlive(state.teamB.fighters[id])) list.push({ team: "B", id });
+  }
+  return list;
+}
+
+function buildTurnOrder(state) {
+  const all = aliveFighters(state);
+  return all
+    .map((ref) => {
+      const fighter = getFighter(state, ref);
+      return { ...ref, speed: getEffectiveStat(fighter, "speed"), name: fighter.name };
+    })
+    .sort((a, b) => {
+      if (b.speed !== a.speed) return b.speed - a.speed;
+      return a.name.localeCompare(b.name);
+    });
+}
+
+function isTeamDefeated(teamState) {
+  return Object.values(teamState.fighters).every((f) => !isAlive(f));
+}
+
+function chooseBestTarget(targets, teamState) {
+  let best = null;
+  let bestHp = Infinity;
+  for (const ref of targets) {
+    const fighter = teamState.fighters[ref.id];
+    if (!fighter) continue;
+    if (fighter.hp < bestHp) {
+      bestHp = fighter.hp;
+      best = ref;
+    }
+  }
+  return best;
+}
+
+function chooseAction(state, casterRef) {
+  const caster = getFighter(state, casterRef);
+  const isSupport = caster.role === "Support";
+  const isDps = caster.role === "DPS";
+  const teamKey = getTeamKey(casterRef);
+  const teamState = teamKey === "teamA" ? state.teamA : state.teamB;
+  const enemyKey = getEnemyKey(casterRef);
+  const enemyState = enemyKey === "teamA" ? state.teamA : state.teamB;
+
+  const abilities = (caster.abilities || []).map((id) => GAME.abilityMap[id]).filter(Boolean);
+  const readyAbilities = abilities.filter((ab) => abilityReady(caster, ab));
+
+  // Healer priority
+  if (isSupport) {
+    const heal = readyAbilities.find((ab) => ab.category === "heal");
+    if (heal) {
+      const targets = selectTargets(state, casterRef, heal);
+      const lowAlly = chooseBestTarget(targets, teamState);
+      if (lowAlly) return { type: "ability", ability: heal, targetId: lowAlly.id };
+    }
+  }
+
+  // DPS finisher
+  if (isDps) {
+    for (const ability of readyAbilities) {
+      const targets = selectTargets(state, casterRef, ability);
+      const killable = targets.find((t) => enemyState.fighters[t.id]?.hp === 1);
+      if (killable) return { type: "ability", ability, targetId: killable.id };
+    }
+  }
+
+  // Support repositioning if exposed
+  const casterPos = getPositionOfFighter(state, casterRef.id);
+  if (isSupport && casterPos?.row === 0) {
+    const backIdx = coordToIndex(1, casterPos.col);
+    if (teamState.grid[backIdx] == null) {
+      return { type: "move", targetIndex: backIdx };
+    }
+  }
+
+  // Choose first available ability with targets
+  for (const ability of readyAbilities) {
+    const targets = selectTargets(state, casterRef, ability);
+    if (targets.length > 0) {
+      const preferred = ability.target === "ally" ? chooseBestTarget(targets, teamState) : chooseBestTarget(targets, enemyState);
+      return { type: "ability", ability, targetId: preferred?.id };
+    }
+  }
+
+  // fallback: move to any adjacent empty tile
+  const currentIndex = findPosition(teamState, casterRef.id);
+  const moves = currentIndex != null ? getAdjacentEmptyPositions(teamState, currentIndex) : [];
+  if (moves.length > 0) {
+    return { type: "move", targetIndex: randomChoice(moves) };
+  }
+
+  return { type: "skip" };
+}
+
+function takeTurn(state) {
+  if (state.turnOrder.length === 0 || state.currentTurnIndex >= state.turnOrder.length) {
+    state.turnOrder = buildTurnOrder(state);
+    state.currentTurnIndex = 0;
+    state.roundNumber += 1;
+    state.flags.interrupted = {};
+    tickEffects(state.teamA);
+    tickEffects(state.teamB);
+  }
+
+  if (state.turnOrder.length === 0) return; // all fighters KO'd
+
+  const ref = state.turnOrder[state.currentTurnIndex];
+  const fighter = getFighter(state, ref);
+  state.currentTurnIndex += 1;
+
+  if (!isAlive(fighter)) return;
+
+  tickShield(fighter);
+  reduceCooldowns(fighter);
+
+  const action = chooseAction(state, ref);
+  if (action.type === "move") {
+    const teamState = getTeamKey(ref) === "teamA" ? state.teamA : state.teamB;
+    if (action.targetIndex != null && teamState.grid[action.targetIndex] == null) {
+      setPosition(teamState, action.targetIndex, ref.id);
+      state.log.push(`${fighter.name} moves to ${POSITIONS[action.targetIndex]}.`);
+    }
+  } else if (action.type === "ability") {
+    applyAbility(state, ref, action.ability, action.targetId);
+  }
+}
+
+function buildBattleState(teamA, teamB) {
+  return {
+    teamA: createTeamState(teamA),
+    teamB: createTeamState(teamB),
+    turnOrder: [],
+    currentTurnIndex: 0,
+    roundNumber: 0,
+    log: [],
+    flags: { interrupted: {} },
+  };
+}
+
+function determineWinner(state) {
+  const aDefeated = isTeamDefeated(state.teamA);
+  const bDefeated = isTeamDefeated(state.teamB);
+  if (aDefeated && bDefeated) return "DRAW";
+  if (aDefeated) return "B";
+  if (bDefeated) return "A";
+  return null;
+}
+
+export function simulateTeamBattle(teamAFighters, teamBFighters) {
+  const clonedA = teamAFighters.map((f) => ({ ...f, hp: f.maxHP }));
+  const clonedB = teamBFighters.map((f) => ({ ...f, hp: f.maxHP }));
+  const state = buildBattleState(clonedA, clonedB);
+  let safety = 500;
+  while (safety-- > 0) {
+    const winner = determineWinner(state);
+    if (winner) {
+      return { winner, log: state.log.join("\n") };
+    }
+    takeTurn(state);
+  }
+  return { winner: "DRAW", log: state.log.join("\n") + "\nTimed out" };
+}
+
+export function simulateTeamSeries(teamAFighters, teamBFighters, games = 3) {
+  let aWins = 0;
+  let bWins = 0;
+  let combinedLog = "";
+
+  for (let i = 0; i < games; i++) {
+    const freshA = teamAFighters.map((f) => ({ ...f, hp: f.maxHP }));
+    const freshB = teamBFighters.map((f) => ({ ...f, hp: f.maxHP }));
+    const result = simulateTeamBattle(freshA, freshB);
+    combinedLog += `Game ${i + 1}: ${result.winner}\n` + result.log + "\n";
+    if (result.winner === "A") aWins++;
+    else if (result.winner === "B") bWins++;
+  }
+
+  let winner = "DRAW";
+  if (aWins > bWins) winner = "A";
+  else if (bWins > aWins) winner = "B";
+
+  return { winner, log: combinedLog.trim() };
+}

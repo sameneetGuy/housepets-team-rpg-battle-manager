@@ -7,7 +7,7 @@ import {
   resetTeamsForNewSeason
 } from "./teams.js";
 import { rollSeasonMetaTrend, setSeasonMetaTrend } from "./meta_trends.js";
-import { simulateTeamBattle, simulateTeamSeries } from "../battle/battle_3v3.js";
+import { simulateTeamBattle, simulateTeamSeries } from "../battle/battle_2x3.js";
 
 /**
  * Generate a single round-robin schedule for N teams.

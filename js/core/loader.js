@@ -2,36 +2,59 @@
 
 import { GAME } from "./state.js";
 
-const SUPPORTED_SAVE_OUTCOMES = new Set(["negate", "reduced", "half"]);
-
 /**
- * Load fighters from fighters.json and normalize their data a bit.
+ * Load fighters and the universal ability list.
  * Returns a Promise that resolves when loading is complete.
  */
 export async function loadFighters() {
-  let response;
+  let fighterResponse;
+  let abilityResponse;
+
   try {
-    response = await fetch("fighters.json");
+    [fighterResponse, abilityResponse] = await Promise.all([
+      fetch("fighters.json"),
+      fetch("abilities_2x3.json"),
+    ]);
   } catch (err) {
-    throw new Error(`Unable to reach fighters.json: ${err.message}`);
+    throw new Error(`Unable to reach data files: ${err.message}`);
   }
 
-  if (!response.ok) {
-    throw new Error(`Failed to load fighters.json: ${response.status}`);
+  if (!fighterResponse?.ok) {
+    throw new Error(`Failed to load fighters.json: ${fighterResponse?.status}`);
   }
 
-  let json;
+  if (!abilityResponse?.ok) {
+    throw new Error(`Failed to load abilities_2x3.json: ${abilityResponse?.status}`);
+  }
+
+  let fightersJson;
+  let abilitiesJson;
   try {
-    json = await response.json();
+    fightersJson = await fighterResponse.json();
   } catch (err) {
     throw new Error(`Invalid fighters.json: ${err.message}`);
   }
 
+  try {
+    abilitiesJson = await abilityResponse.json();
+  } catch (err) {
+    throw new Error(`Invalid abilities_2x3.json: ${err.message}`);
+  }
+
   // Store raw fighters
-  GAME.fighters = json;
+  GAME.fighters = fightersJson;
 
   // Stable order of fighters (by id)
-  GAME.fighterOrder = Object.keys(json);
+  GAME.fighterOrder = Object.keys(fightersJson);
+
+  // Universal abilities
+  GAME.abilities = Array.isArray(abilitiesJson) ? abilitiesJson : [];
+  GAME.abilityMap = {};
+  for (const ability of GAME.abilities) {
+    if (ability?.id) {
+      GAME.abilityMap[ability.id] = ability;
+    }
+  }
 
   // Normalize fighter fields
   for (const fid of GAME.fighterOrder) {
@@ -44,34 +67,7 @@ export async function loadFighters() {
 
     // Ensure maxHP exists (should already be in fighters.json)
     if (typeof f.maxHP !== "number") {
-      f.maxHP = 30;
-    }
-
-    // Normalize abilities a bit (rank + placeholders)
-    if (Array.isArray(f.abilities)) {
-      for (const ability of f.abilities) {
-        // Default rank = 1 if not specified
-        if (ability.rank == null) {
-          ability.rank = 1;
-        }
-
-        if (ability.save && ability.save.onSave) {
-          const onSave = ability.save.onSave;
-          if (!SUPPORTED_SAVE_OUTCOMES.has(onSave)) {
-            console.warn(
-              `Ability ${ability.id || ability.name || "<unknown>"} of fighter ${fid} declares unsupported onSave="${onSave}".`
-            );
-          }
-        }
-
-        // In the future, you might add:
-        // - currentXP
-        // - maxRank
-        // For now we only guarantee rank exists.
-      }
-    } else {
-      // Safety: ensure abilities is always an array
-      f.abilities = [];
+      f.maxHP = f.role === "Tank" ? 4 : 3;
     }
   }
 }
