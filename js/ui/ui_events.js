@@ -62,9 +62,9 @@ export function setupUIEvents({ startNewSeason, advanceDay, renderAll, statusEl 
       for (let i = 0; i < 50; i++) {
         if (GAME.seasonPhase === "offseason") {
           ensureOffseasonTradeTracking();
-          if (!allTeamsCompletedOffseasonTradeRequirement()) {
-            autoResolveOffseasonTrades();
-          }
+          // Mirror the Auto-Resolve Offseason Trades button so every simulated
+          // season completes its required trades before starting.
+          autoResolveOffseasonTrades();
         }
 
         const startResult = startNewSeason({ autoResolveOffseason: true });
