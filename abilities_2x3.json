@@ -29,7 +29,7 @@
       ],
       "debuffs": []
     },
-    "cooldown": 3,
+    "cooldown": 2,
     "oncePerBattle": false
   },
   {
@@ -54,7 +54,7 @@
       "damage": 1,
       "heal": 0,
       "shield": 0,
-      "buffs": [],
+      "buffs": [{ "stat": "defense", "amount": 1, "duration": 1 }],
       "debuffs": []
     },
     "cooldown": 0,
@@ -84,8 +84,8 @@
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 3,
-    "oncePerBattle": false
+    "cooldown": 4,
+    "oncePerBattle": true
   },
   {
     "id": "line_cleave",
@@ -146,7 +146,7 @@
         }
       ]
     },
-    "cooldown": 2,
+    "cooldown": 1,
     "oncePerBattle": false
   },
   {
@@ -204,11 +204,11 @@
         {
           "stat": "attack",
           "amount": -1,
-          "duration": 2
+          "duration": 1
         }
       ]
     },
-    "cooldown": 3,
+    "cooldown": 4,
     "oncePerBattle": false
   },
   {
@@ -237,7 +237,8 @@
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "interruptible": true
   },
   {
     "id": "dash_strike",
@@ -263,7 +264,7 @@
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 1,
+    "cooldown": 2,
     "oncePerBattle": false
   },
   {
@@ -284,7 +285,7 @@
       "lanes": "same_lane"
     },
     "effect": {
-      "damage": 1,
+      "damage": 2,
       "heal": 0,
       "shield": 0,
       "buffs": [],
@@ -323,7 +324,7 @@
         }
       ]
     },
-    "cooldown": 2,
+    "cooldown": 3,
     "oncePerBattle": false
   },
   {
@@ -407,7 +408,7 @@
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 0,
+    "cooldown": 1,
     "oncePerBattle": false
   },
   {
@@ -434,7 +435,7 @@
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 2,
+    "cooldown": 3,
     "oncePerBattle": false
   },
   {
@@ -463,12 +464,12 @@
         {
           "stat": "attack",
           "amount": 1,
-          "duration": 2
+          "duration": 3
         }
       ],
       "debuffs": []
     },
-    "cooldown": 3,
+    "cooldown": 2,
     "oncePerBattle": false
   },
   {
@@ -497,7 +498,8 @@
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "interruptible": true
   },
   {
     "id": "clarity_pulse",
@@ -511,7 +513,7 @@
     "category": "buff",
     "target": "ally",
     "range": {
-      "pattern": "team",
+      "pattern": "single",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
@@ -607,7 +609,7 @@
     "category": "debuff",
     "target": "enemy",
     "range": {
-      "pattern": "random2",
+      "pattern": "single",
       "delivery": "projectile",
       "stepIn": false,
       "diagonal": false,
@@ -622,7 +624,7 @@
         {
           "stat": "attack",
           "amount": -1,
-          "duration": 1
+          "duration": 2
         }
       ]
     },
@@ -641,7 +643,7 @@
     "category": "buff",
     "target": "ally",
     "range": {
-      "pattern": "team",
+      "pattern": "single",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
@@ -729,7 +731,7 @@
     "category": "shield",
     "target": "ally",
     "range": {
-      "pattern": "team",
+      "pattern": "single",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
@@ -772,7 +774,7 @@
         {
           "stat": "speed",
           "amount": -1,
-          "duration": 2
+          "duration": 3
         }
       ]
     },
@@ -804,6 +806,7 @@
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "interruptible": true
   }
 ]
