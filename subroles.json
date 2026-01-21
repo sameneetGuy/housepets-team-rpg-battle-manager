@@ -1,56 +1,53 @@
 {
   "Paladin": {
-    "attack": 3,
-    "defense": 4,
-    "speed": 3,
-    "roles": [
-      "Tank",
-      "Support"
-    ],
+    "roles": ["Tank", "Support"],
     "primaryRole": "Tank",
+    "attack": 2,
+    "defense": 5,
+    "speed": 2,
+    "precision": 3,
     "hp": 10
   },
   "BruiserTank": {
-    "attack": 4,
-    "defense": 3,
-    "speed": 3,
-    "roles": [
-      "Tank",
-      "DPS"
-    ],
+    "roles": ["Tank", "DPS"],
     "primaryRole": "Tank",
+    "attack": 4,
+    "defense": 4,
+    "speed": 2,
+    "precision": 2,
     "hp": 9
   },
   "Warden": {
     "role": "Tank",
-    "attack": 3,
-    "defense": 4,
-    "speed": 4,
+    "attack": 2,
+    "defense": 5,
+    "speed": 3,
+    "precision": 2,
     "hp": 10
   },
   "Defender": {
     "role": "Tank",
-    "attack": 2,
-    "defense": 5,
-    "speed": 3,
+    "attack": 1,
+    "defense": 6,
+    "speed": 2,
+    "precision": 3,
     "hp": 11
   },
   "Vanguard": {
-    "attack": 4,
-    "defense": 2,
-    "speed": 4,
-    "roles": [
-      "Tank",
-      "DPS"
-    ],
+    "roles": ["Tank", "DPS"],
     "primaryRole": "Tank",
+    "attack": 4,
+    "defense": 3,
+    "speed": 4,
+    "precision": 1,
     "hp": 9
   },
   "Guardian": {
     "role": "Tank",
     "attack": 3,
     "defense": 4,
-    "speed": 4,
+    "speed": 3,
+    "precision": 2,
     "hp": 10
   },
   "Bruiser": {
@@ -58,162 +55,171 @@
     "attack": 4,
     "defense": 4,
     "speed": 3,
+    "precision": 0,
     "hp": 8
   },
   "Berserker": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
+    "attack": 6,
+    "defense": 1,
     "speed": 4,
+    "precision": 0,
     "hp": 6
   },
   "Striker": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
+    "attack": 5,
+    "defense": 2,
     "speed": 4,
+    "precision": 0,
     "hp": 7
   },
   "Skirmisher": {
     "role": "DPS",
     "attack": 4,
-    "defense": 3,
-    "speed": 4,
+    "defense": 2,
+    "speed": 5,
+    "precision": 0,
     "hp": 7
   },
   "Agile": {
     "role": "DPS",
-    "attack": 3,
-    "defense": 4,
-    "speed": 4,
+    "attack": 4,
+    "defense": 2,
+    "speed": 5,
+    "precision": 0,
     "hp": 7
   },
   "Caster": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
+    "attack": 5,
+    "defense": 1,
+    "speed": 3,
+    "precision": 2,
     "hp": 6
   },
   "Marksman": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
+    "attack": 5,
+    "defense": 2,
+    "speed": 3,
+    "precision": 1,
     "hp": 7
   },
   "Archer": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
+    "attack": 5,
+    "defense": 2,
+    "speed": 3,
+    "precision": 1,
     "hp": 7
   },
   "Artillery": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
-    "hp": 7
+    "attack": 5,
+    "defense": 1,
+    "speed": 3,
+    "precision": 2,
+    "hp": 6
   },
   "Blitzer": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
-    "hp": 7
+    "attack": 6,
+    "defense": 1,
+    "speed": 3,
+    "precision": 1,
+    "hp": 6
   },
   "Assassin": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
+    "attack": 5,
+    "defense": 1,
     "speed": 4,
-    "hp": 7
+    "precision": 1,
+    "hp": 6
   },
   "Duelist": {
     "role": "DPS",
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
+    "attack": 5,
+    "defense": 2,
+    "speed": 3,
+    "precision": 1,
     "hp": 7
   },
   "Healer": {
     "role": "Support",
-    "attack": 2,
-    "defense": 3,
-    "speed": 4,
+    "attack": 1,
+    "defense": 2,
+    "speed": 3,
+    "precision": 4,
     "hp": 5
   },
   "Buffer": {
     "role": "Support",
-    "attack": 3,
-    "defense": 4,
-    "speed": 4,
+    "attack": 2,
+    "defense": 3,
+    "speed": 2,
+    "precision": 3,
     "hp": 7
   },
   "Leader": {
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
-    "roles": [
-      "Support",
-      "DPS"
-    ],
+    "roles": ["Support", "DPS"],
     "primaryRole": "Support",
+    "attack": 4,
+    "defense": 2,
+    "speed": 3,
+    "precision": 2,
     "hp": 7
   },
   "Tactician": {
     "role": "Support",
-    "attack": 3,
-    "defense": 4,
-    "speed": 4,
-    "hp": 6
+    "attack": 2,
+    "defense": 3,
+    "speed": 2,
+    "precision": 3,
+    "hp": 7
   },
   "SpiritGuide": {
-    "attack": 4,
-    "defense": 3,
-    "speed": 4,
-    "roles": [
-      "Support",
-      "DPS"
-    ],
+    "roles": ["Support", "DPS"],
     "primaryRole": "Support",
+    "attack": 4,
+    "defense": 2,
+    "speed": 2,
+    "precision": 3,
     "hp": 6
   },
   "Trickster": {
     "role": "Support",
-    "attack": 3,
-    "defense": 4,
+    "attack": 2,
+    "defense": 2,
     "speed": 4,
+    "precision": 2,
     "hp": 6
   },
   "Debuffer": {
     "role": "Support",
-    "attack": 3,
-    "defense": 4,
-    "speed": 4,
+    "attack": 1,
+    "defense": 2,
+    "speed": 3,
+    "precision": 4,
     "hp": 6
   },
   "ArcaneController": {
-    "attack": 4,
-    "defense": 2,
-    "speed": 5,
-    "roles": [
-      "Support",
-      "DPS"
-    ],
+    "roles": ["Support", "DPS"],
     "primaryRole": "Support",
+    "attack": 4,
+    "defense": 1,
+    "speed": 2,
+    "precision": 4,
     "hp": 6
   },
   "Mystic": {
-    "attack": 4,
-    "defense": 2,
-    "speed": 5,
-    "roles": [
-      "Support",
-      "DPS"
-    ],
+    "roles": ["Support", "DPS"],
     "primaryRole": "Support",
+    "attack": 4,
+    "defense": 1,
+    "speed": 3,
+    "precision": 3,
     "hp": 6
   }
 }

@@ -90,12 +90,14 @@ export async function loadFighters() {
       f.attack = subroleStats.attack;
       f.defense = subroleStats.defense;
       f.speed = subroleStats.speed;
+      f.precision = subroleStats.precision;
       f.maxHP = typeof f.maxHP === "number" ? f.maxHP : subroleStats.hp;
     } else {
       // Fallback to existing fighter values when subrole is missing
       f.attack = typeof f.attack === "number" ? f.attack : 3;
       f.defense = typeof f.defense === "number" ? f.defense : 3;
       f.speed = typeof f.speed === "number" ? f.speed : 3;
+      f.precision = typeof f.precision === "number" ? f.precision : 0;
       f.maxHP = typeof f.maxHP === "number" ? f.maxHP : 3;
       f.role = f.role || "DPS";
       f.roles = f.roles || [f.role];
