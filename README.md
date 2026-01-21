@@ -41,4 +41,6 @@ A 3v3 tactical autobattler with league, cup, and playoff systems inspired by spo
 
 ## License
 
-MIT License
+**Code:** MIT License (see LICENSE file)
+
+**Characters:** All character names and personalities are property of Rick Griffin and the Housepets! webcomic. Used with respect as a fan project.
