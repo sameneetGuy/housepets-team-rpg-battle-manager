@@ -1,7 +1,5 @@
 # Housepets Team RPG Battle Manager
 
-**Version 2.0 - Stat System Redesign**
-
 A 3v3 tactical autobattler with league, cup, and playoff systems inspired by sports managers. Features a sophisticated 2×3 grid battle system with positioning, abilities, buffs, debuffs, and hybrid role support.
 
 ## Features
@@ -55,7 +53,7 @@ Debuff accuracy: D20 + Precision vs D20 + Precision
 
 ## Changelog
 
-### Version 2.0 - Stat System Redesign (January 2026)
+### Version 0.2 - Stat System Redesign (January 2026)
 - **BREAKING CHANGE:** Complete stat system overhaul
 - Added 4th stat: Precision (affects debuff accuracy)
 - Rebalanced all 27 subroles with unique stat distributions
