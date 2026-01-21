@@ -8,6 +8,40 @@ const POSITIONS = ["FL", "FC", "FR", "BL", "BC", "BR"];
 const BUFF_CAP = 3;
 const STAT_CAP = 8;
 
+class TargetingError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "TargetingError";
+  }
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function validateFighterState(fighter) {
+  if (!fighter) return;
+  assert(typeof fighter.hp === "number", "Fighter hp must be a number.");
+  assert(typeof fighter.maxHP === "number", "Fighter maxHP must be a number.");
+  assert(fighter.hp >= 0 && fighter.hp <= fighter.maxHP, "Fighter hp out of bounds.");
+  assert(fighter.shieldValue >= 0, "Fighter shieldValue must be >= 0.");
+  assert(
+    fighter.buffs.every((b) => (b.duration ?? 1) > 0),
+    "Fighter buffs must have positive duration.",
+  );
+  assert(
+    fighter.debuffs.every((d) => (d.duration ?? 1) > 0),
+    "Fighter debuffs must have positive duration.",
+  );
+  if (fighter.cooldowns) {
+    for (const key of Object.keys(fighter.cooldowns)) {
+      assert((fighter.cooldowns[key] || 0) >= 0, "Fighter cooldowns must be >= 0.");
+    }
+  }
+}
+
 function indexToCoord(idx) {
   const row = idx < 3 ? 0 : 1;
   const col = idx % 3;
@@ -45,11 +79,17 @@ function createFighterInstance(base) {
   };
 }
 
+function cloneFighterForBattle(base) {
+  const instance = createFighterInstance(base);
+  validateFighterState(instance);
+  return instance;
+}
+
 function createTeamState(fighters) {
   const grid = Array(6).fill(null);
   const fighterMap = {};
   fighters.forEach((f, idx) => {
-    const instance = createFighterInstance(f);
+    const instance = cloneFighterForBattle(f);
     const pos = idx < 3 ? idx : 3 + (idx - 3);
     grid[pos] = instance.id;
     fighterMap[instance.id] = instance;
@@ -168,18 +208,20 @@ function applyBuffs(target, buffArray) {
   if (!Array.isArray(buffArray)) return;
   for (const buff of buffArray) {
     if (buff?.stat && typeof buff.amount === "number") {
-      target.buffs.push({ ...buff });
+      target.buffs.push({ ...buff, duration: buff.duration ?? 1 });
     }
   }
+  validateFighterState(target);
 }
 
 function applyDebuffs(target, debuffArray) {
   if (!Array.isArray(debuffArray)) return;
   for (const debuff of debuffArray) {
     if (debuff?.stat && typeof debuff.amount === "number") {
-      target.debuffs.push({ ...debuff });
+      target.debuffs.push({ ...debuff, duration: debuff.duration ?? 1 });
     }
   }
+  validateFighterState(target);
 }
 
 function tickEffects(teamState) {
@@ -191,6 +233,7 @@ function tickEffects(teamState) {
     f.debuffs = f.debuffs
       .map((d) => ({ ...d, duration: (d.duration || 1) - 1 }))
       .filter((d) => (d.duration || 0) > 0);
+    validateFighterState(f);
   }
 }
 
@@ -198,6 +241,7 @@ function applyShield(target, amount) {
   if (amount <= 0) return;
   target.shieldValue = Math.max(target.shieldValue, amount);
   target.shieldDecay = 1;
+  validateFighterState(target);
 }
 
 function applyHeal(source, target, amount, log) {
@@ -208,6 +252,7 @@ function applyHeal(source, target, amount, log) {
   if (healed > 0) {
     log.push(`${source.name} heals ${target.name} for ${healed} HP.`);
   }
+  validateFighterState(target);
 }
 
 function dealDamage(state, source, targetRef, amount, log) {
@@ -228,6 +273,7 @@ function dealDamage(state, source, targetRef, amount, log) {
 
     if (damage === 0) {
       state.flags.interrupted[targetRef.id] = true;
+      validateFighterState(target);
       return;
     }
   }
@@ -238,12 +284,14 @@ function dealDamage(state, source, targetRef, amount, log) {
   if (target.hp === 0) {
     log.push(`${target.name} is KO'd!`);
   }
+  validateFighterState(target);
 }
 
 function tickShield(fighter) {
   if (fighter.shieldValue > 0) {
     fighter.shieldValue = Math.max(0, fighter.shieldValue - (fighter.shieldDecay || 1));
   }
+  validateFighterState(fighter);
 }
 
 function setPosition(teamState, idx, fighterId) {
@@ -380,6 +428,68 @@ function filterPatternTargets(candidates, casterPos, pattern) {
   return candidates;
 }
 
+function isValidTargetForAbility(state, casterRef, casterPos, ability, targetRef) {
+  const targetTeam = targetRef.team === "A" ? state.teamA : state.teamB;
+  const target = targetTeam.fighters[targetRef.id];
+  if (!isAlive(target)) return false;
+
+  const range = ability.range || {};
+  if (ability.target === "enemy") {
+    if (range.delivery === "projectile") {
+      return columnAllowedForProjectile(targetRef.col, casterPos.col);
+    }
+
+    const allowedCols = new Set([casterPos.col]);
+    if (range.diagonal) {
+      allowedCols.add(Math.max(0, casterPos.col - 1));
+      allowedCols.add(Math.min(2, casterPos.col + 1));
+    }
+    if (!allowedCols.has(targetRef.col)) return false;
+
+    if (range.stepIn !== true && targetRef.row !== 0) return false;
+
+    if (range.stepIn === true && targetRef.row === 1) {
+      const enemyTeamKey = getEnemyKey({ team: casterPos.team });
+      const enemyTeam = enemyTeamKey === "teamA" ? state.teamA : state.teamB;
+      const frontIdx = coordToIndex(0, targetRef.col);
+      if (enemyTeam.grid[frontIdx]) return false;
+    }
+  }
+
+  if (ability.target === "ally" || ability.target === "self") {
+    const allowedCols = new Set();
+    if (range.lanes === "self" || range.lanes === "same_lane") {
+      allowedCols.add(casterPos.col);
+    } else if (range.lanes === "same_or_adjacent") {
+      allowedCols.add(casterPos.col);
+      allowedCols.add(Math.max(0, casterPos.col - 1));
+      allowedCols.add(Math.min(2, casterPos.col + 1));
+    } else {
+      allowedCols.add(0);
+      allowedCols.add(1);
+      allowedCols.add(2);
+    }
+
+    if (!allowedCols.has(targetRef.col)) return false;
+    if (range.target === "self" && targetRef.id !== casterRef.id) return false;
+    if (range.lanes === "self" && targetRef.id !== casterRef.id) return false;
+  }
+
+  return true;
+}
+
+function validateTargets(state, casterRef, casterPos, ability, targets) {
+  if (targets.length === 0) {
+    throw new TargetingError(`No valid targets for ${ability.name}.`);
+  }
+
+  for (const targetRef of targets) {
+    if (!isValidTargetForAbility(state, casterRef, casterPos, ability, targetRef)) {
+      throw new TargetingError(`Invalid target for ${ability.name}.`);
+    }
+  }
+}
+
 function selectTargets(state, casterRef, ability, preferredTargetId = null) {
   const casterPos = getPositionOfFighter(state, casterRef.id);
   if (!casterPos) return [];
@@ -395,19 +505,28 @@ function selectTargets(state, casterRef, ability, preferredTargetId = null) {
   candidates = filterPatternTargets(candidates, casterPos, pattern);
 
   if (pattern === "random2") {
-    return shuffle(candidates).slice(0, 2);
+    const picks = shuffle(candidates).slice(0, 2);
+    validateTargets(state, casterRef, casterPos, ability, picks);
+    if (picks.length < 2) {
+      state.log.push(`Warning: ${ability.name} has fewer than 2 targets.`);
+    }
+    return picks;
   }
 
   if (pattern === "random") {
     const pick = randomChoice(candidates);
-    return pick ? [pick] : [];
+    const picks = pick ? [pick] : [];
+    validateTargets(state, casterRef, casterPos, ability, picks);
+    return picks;
   }
 
   if (pattern === "team") {
+    validateTargets(state, casterRef, casterPos, ability, candidates);
     return candidates;
   }
 
   if (pattern !== "single") {
+    validateTargets(state, casterRef, casterPos, ability, candidates);
     return candidates;
   }
 
@@ -416,7 +535,9 @@ function selectTargets(state, casterRef, ability, preferredTargetId = null) {
     if (found) return [found];
   }
 
-  return candidates.length > 0 ? [candidates[0]] : [];
+  const selection = candidates.length > 0 ? [candidates[0]] : [];
+  validateTargets(state, casterRef, casterPos, ability, selection);
+  return selection;
 }
 
 function abilityReady(fighter, ability) {
@@ -430,14 +551,23 @@ function reduceCooldowns(fighter) {
   for (const key of Object.keys(fighter.cooldowns)) {
     fighter.cooldowns[key] = Math.max(0, (fighter.cooldowns[key] || 0) - 1);
   }
+  validateFighterState(fighter);
 }
 
 function applyAbility(state, casterRef, ability, chosenTargetId = null) {
   const caster = getFighter(state, casterRef);
   if (!caster) return;
 
-  const targets = selectTargets(state, casterRef, ability, chosenTargetId);
-  if (targets.length === 0) return;
+  let targets = [];
+  try {
+    targets = selectTargets(state, casterRef, ability, chosenTargetId);
+  } catch (error) {
+    if (error instanceof TargetingError) {
+      state.log.push(`Targeting error: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
 
   if (ability.interruptible && state.flags.interrupted[casterRef.id]) {
     state.log.push(`${caster.name}'s ${ability.name} is interrupted!`);
@@ -453,6 +583,7 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
     if (!isAlive(target)) continue;
 
     // --- Hit checks for enemy-targeting abilities ---
+    // Hit check precedence: damage hit check first, then pure debuff checks.
     if (isEnemyTarget) {
       const hasDamage = !!ability.damageDice || !!effect.damage;
       const hasDebuffs = Array.isArray(effect.debuffs) && effect.debuffs.length > 0;
@@ -598,7 +729,7 @@ function chooseBestTarget(targets, teamState) {
 
 function chooseAction(state, casterRef) {
   const caster = getFighter(state, casterRef);
-  const subroleData = GAME.subroleMap?.[caster.subRole] || GAME.subroles?.[caster.subRole];
+  const subroleData = state.lookups.subroleMap?.[caster.subRole] || state.lookups.subroles?.[caster.subRole];
   const roles = subroleData?.roles || caster.roles || [subroleData?.role || caster.role].filter(Boolean);
   const isSupport = roles.includes("Support");
   const isDps = roles.includes("DPS");
@@ -607,14 +738,25 @@ function chooseAction(state, casterRef) {
   const enemyKey = getEnemyKey(casterRef);
   const enemyState = enemyKey === "teamA" ? state.teamA : state.teamB;
 
-  const abilities = (caster.abilities || []).map((id) => GAME.abilityMap[id]).filter(Boolean);
+  const abilities = (caster.abilities || [])
+    .map((id) => state.lookups.abilityMap[id])
+    .filter(Boolean);
   const readyAbilities = abilities.filter((ab) => abilityReady(caster, ab));
 
   // Healer priority
   if (isSupport) {
     const heal = readyAbilities.find((ab) => ab.category === "heal");
     if (heal) {
-      const targets = selectTargets(state, casterRef, heal);
+      let targets = [];
+      try {
+        targets = selectTargets(state, casterRef, heal);
+      } catch (error) {
+        if (error instanceof TargetingError) {
+          targets = [];
+        } else {
+          throw error;
+        }
+      }
       const lowAlly = chooseBestTarget(targets, teamState);
       if (lowAlly && teamState.fighters[lowAlly.id]?.hp < teamState.fighters[lowAlly.id]?.maxHP * 0.7) {
         return { type: "ability", ability: heal, targetId: lowAlly.id };
@@ -625,7 +767,16 @@ function chooseAction(state, casterRef) {
   // DPS finisher
   if (isDps) {
     for (const ability of readyAbilities) {
-      const targets = selectTargets(state, casterRef, ability);
+      let targets = [];
+      try {
+        targets = selectTargets(state, casterRef, ability);
+      } catch (error) {
+        if (error instanceof TargetingError) {
+          targets = [];
+        } else {
+          throw error;
+        }
+      }
       const killable = targets.find((t) => enemyState.fighters[t.id]?.hp <= 3);
       if (killable) {
         return { type: "ability", ability, targetId: killable.id };
@@ -652,7 +803,16 @@ function chooseAction(state, casterRef) {
 
   // Choose first available ability with targets
   for (const ability of readyAbilities) {
-    const targets = selectTargets(state, casterRef, ability);
+    let targets = [];
+    try {
+      targets = selectTargets(state, casterRef, ability);
+    } catch (error) {
+      if (error instanceof TargetingError) {
+        targets = [];
+      } else {
+        throw error;
+      }
+    }
     if (targets.length > 0) {
       const preferred = ability.target === "ally" ? chooseBestTarget(targets, teamState) : chooseBestTarget(targets, enemyState);
       return { type: "ability", ability, targetId: preferred?.id };
@@ -667,6 +827,27 @@ function chooseAction(state, casterRef) {
   }
 
   return { type: "skip" };
+}
+
+function validateAbility(ability) {
+  assert(ability.id, "Ability missing id.");
+  assert(ability.name, "Ability missing name.");
+  assert(ability.range, "Ability missing range.");
+  assert(ability.target, "Ability missing target.");
+  const hasEffect = ability.effect && Object.keys(ability.effect).length > 0;
+  const hasDice = ability.damageDice || ability.healDice || ability.shieldDice;
+  assert(hasEffect || hasDice, "Ability missing effect or dice.");
+}
+
+function validateAbilityData(teamA, teamB, abilityMap) {
+  const fighters = [...teamA, ...teamB];
+  for (const fighter of fighters) {
+    for (const id of fighter.abilities || []) {
+      const ability = abilityMap[id];
+      assert(ability, `Missing ability for id ${id}.`);
+      validateAbility(ability);
+    }
+  }
 }
 
 function takeTurn(state) {
@@ -702,7 +883,11 @@ function takeTurn(state) {
   }
 }
 
-function buildBattleState(teamA, teamB) {
+function buildBattleState(teamA, teamB, dependencies = {}) {
+  const abilityMap = dependencies.abilityMap || GAME.abilityMap;
+  const subroleMap = dependencies.subroleMap || GAME.subroleMap;
+  const subroles = dependencies.subroles || GAME.subroles;
+  validateAbilityData(teamA, teamB, abilityMap);
   return {
     teamA: createTeamState(teamA),
     teamB: createTeamState(teamB),
@@ -711,6 +896,7 @@ function buildBattleState(teamA, teamB) {
     roundNumber: 0,
     log: [],
     flags: { interrupted: {} },
+    lookups: { abilityMap, subroleMap, subroles },
   };
 }
 
@@ -724,9 +910,7 @@ function determineWinner(state) {
 }
 
 export function simulateTeamBattle(teamAFighters, teamBFighters) {
-  const clonedA = teamAFighters.map((f) => ({ ...f, hp: f.maxHP }));
-  const clonedB = teamBFighters.map((f) => ({ ...f, hp: f.maxHP }));
-  const state = buildBattleState(clonedA, clonedB);
+  const state = buildBattleState(teamAFighters, teamBFighters);
   let safety = 500;
   while (safety-- > 0) {
     const winner = determineWinner(state);
@@ -744,9 +928,7 @@ export function simulateTeamSeries(teamAFighters, teamBFighters, games = 3) {
   let combinedLog = "";
 
   for (let i = 0; i < games; i++) {
-    const freshA = teamAFighters.map((f) => ({ ...f, hp: f.maxHP }));
-    const freshB = teamBFighters.map((f) => ({ ...f, hp: f.maxHP }));
-    const result = simulateTeamBattle(freshA, freshB);
+    const result = simulateTeamBattle(teamAFighters, teamBFighters);
     combinedLog += `Game ${i + 1}: ${result.winner}\n` + result.log + "\n";
     if (result.winner === "A") aWins++;
     else if (result.winner === "B") bWins++;
