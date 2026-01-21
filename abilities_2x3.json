@@ -181,7 +181,7 @@
     "oncePerBattle": false,
     "damageDice": null,
     "healDice": null,
-    "shieldDice": null
+    "shieldDice": "1d4"
   },
   {
     "id": "step_in_taunt",
