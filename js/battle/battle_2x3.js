@@ -7,6 +7,7 @@ import { roll } from "../core/dice.js";
 const POSITIONS = ["FL", "FC", "FR", "BL", "BC", "BR"];
 const BUFF_CAP = 3;
 const STAT_CAP = 8;
+const DEBUG = false;
 
 class TargetingError extends Error {
   constructor(message) {
@@ -22,7 +23,7 @@ function assert(condition, message) {
 }
 
 function validateFighterState(fighter) {
-  if (!fighter) return;
+  if (!DEBUG || !fighter) return;
   assert(typeof fighter.hp === "number", "Fighter hp must be a number.");
   assert(typeof fighter.maxHP === "number", "Fighter maxHP must be a number.");
   assert(fighter.hp >= 0 && fighter.hp <= fighter.maxHP, "Fighter hp out of bounds.");
@@ -323,8 +324,7 @@ function columnAllowedForProjectile(col, casterCol) {
 }
 
 function collectEnemyTargets(state, casterRef, ability) {
-  const enemyTeamKey = getEnemyKey(casterRef);
-  const enemyTeam = enemyTeamKey === "teamA" ? state.teamA : state.teamB;
+  if (lowAlly && teamState.fighters[lowAlly.id]?.hp < teamState.fighters[lowAlly.id]?.maxHP * 0.7) {
   const casterPos = getPositionOfFighter(state, casterRef.id);
   if (!casterPos) return [];
 
@@ -449,8 +449,7 @@ function isValidTargetForAbility(state, casterRef, casterPos, ability, targetRef
     if (range.stepIn !== true && targetRef.row !== 0) return false;
 
     if (range.stepIn === true && targetRef.row === 1) {
-      const enemyTeamKey = getEnemyKey({ team: casterPos.team });
-      const enemyTeam = enemyTeamKey === "teamA" ? state.teamA : state.teamB;
+      const enemyTeam = casterPos.team === "A" ? state.teamB : state.teamA;
       const frontIdx = coordToIndex(0, targetRef.col);
       if (enemyTeam.grid[frontIdx]) return false;
     }
@@ -532,7 +531,10 @@ function selectTargets(state, casterRef, ability, preferredTargetId = null) {
 
   if (preferredTargetId) {
     const found = candidates.find((t) => t.id === preferredTargetId);
-    if (found) return [found];
+    if (found) {
+      validateTargets(state, casterRef, casterPos, ability, [found]);
+      return [found];
+    }
   }
 
   const selection = candidates.length > 0 ? [candidates[0]] : [];
@@ -588,19 +590,14 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
       const hasDamage = !!ability.damageDice || !!effect.damage;
       const hasDebuffs = Array.isArray(effect.debuffs) && effect.debuffs.length > 0;
 
+      let hit = true;
       if (hasDamage) {
-        const hit = attemptAttackHit(state, caster, target, ability);
-        if (!hit) {
-          // On a miss, do not apply damage or offensive riders to this target.
-          continue;
-        }
+        hit = attemptAttackHit(state, caster, target, ability);
       } else if (hasDebuffs && ability.category === "debuff") {
-        const hit = attemptDebuffHit(state, caster, target, ability);
-        if (!hit) {
-          // Pure debuff failed to land on this target.
-          continue;
-        }
+        hit = attemptDebuffHit(state, caster, target, ability);
       }
+      
+      if (!hit) continue;
     }
 
     if (ability.damageDice) {
@@ -752,7 +749,8 @@ function chooseAction(state, casterRef) {
         targets = selectTargets(state, casterRef, heal);
       } catch (error) {
         if (error instanceof TargetingError) {
-          targets = [];
+          state.log.push(`Targeting error: ${error.message}`);
+          return;
         } else {
           throw error;
         }
@@ -836,7 +834,8 @@ function validateAbility(ability) {
   assert(ability.target, "Ability missing target.");
   const hasEffect = ability.effect && Object.keys(ability.effect).length > 0;
   const hasDice = ability.damageDice || ability.healDice || ability.shieldDice;
-  assert(hasEffect || hasDice, "Ability missing effect or dice.");
+  const hasPostEffect = ability.postEffect && Object.keys(ability.postEffect).length > 0;
+  assert(hasEffect || hasDice || hasPostEffect, "Ability missing effect, postEffect, or dice.");
 }
 
 function validateAbilityData(teamA, teamB, abilityMap) {
