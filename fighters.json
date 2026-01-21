@@ -6,10 +6,10 @@
     "abilities": [
       "guard_slam",
       "shield_wall",
-      "step_in_taunt",
-      "line_cleave"
+      "lay_on_hands",
+      "divine_cleave"
     ],
-    "ultimateId": "line_cleave",
+    "ultimateId": "divine_cleave",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -94,12 +94,12 @@
     "name": "Satau",
     "subRole": "Vanguard",
     "abilities": [
-      "guard_slam",
       "shield_bash",
-      "brace",
-      "line_cleave"
+      "intercept_strike",
+      "dash_strike",
+      "devastating_charge"
     ],
-    "ultimateId": "line_cleave",
+    "ultimateId": "devastating_charge",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -141,7 +141,7 @@
     "abilities": [
       "guard_slam",
       "shield_bash",
-      "step_in_taunt",
+      "piercing_thrust",
       "line_cleave"
     ],
     "ultimateId": "line_cleave",
@@ -170,11 +170,11 @@
     "subRole": "Leader",
     "abilities": [
       "attack_buff",
+      "inspiring_strike",
       "clarity_pulse",
-      "speed_sap",
-      "barrier_field"
+      "rallying_cry"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "rallying_cry",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -276,7 +276,7 @@
     "abilities": [
       "guard_slam",
       "shield_bash",
-      "step_in_taunt",
+      "piercing_thrust",
       "line_cleave"
     ],
     "ultimateId": "line_cleave",
@@ -320,11 +320,11 @@
     "subRole": "Vanguard",
     "abilities": [
       "shield_bash",
-      "brace",
-      "guard_slam",
-      "line_cleave"
+      "intercept_strike",
+      "dash_strike",
+      "devastating_charge"
     ],
-    "ultimateId": "line_cleave",
+    "ultimateId": "devastating_charge",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -345,17 +345,20 @@
     "superCupTitles": 0
   },
   "sabrina": {
-  "id": "sabrina",
-  "name": "Sabrina",
-  "subRole": "Mystic",
-  "abilities": [
-    "clarity_pulse",
-    "protective_shield",
-    "hex_mist",
-    "encouraging_words"
-  ],
-  "ultimateId": "clarity_pulse"
-},
+    "id": "sabrina",
+    "name": "Sabrina",
+    "subRole": "Mystic",
+    "abilities": [
+      "hex_mist",
+      "arcane_bolt",
+      "clarity_pulse",
+      "chaos_storm"
+    ],
+    "ultimateId": "chaos_storm",
+    "leagueTitles": 0,
+    "cupTitles": 0,
+    "superCupTitles": 0
+  },
   "fido": {
     "id": "fido",
     "name": "Fido",
@@ -363,7 +366,7 @@
     "abilities": [
       "guard_slam",
       "shield_bash",
-      "intercept_strike",
+      "piercing_thrust",
       "line_cleave"
     ],
     "ultimateId": "line_cleave",
@@ -392,11 +395,14 @@
     "subRole": "SpiritGuide",
     "abilities": [
       "warm_heal",
+      "smite",
       "clarity_pulse",
-      "lane_swap",
-      "encouraging_words"
+      "radiant_burst"
     ],
-    "ultimateId": "clarity_pulse"
+    "ultimateId": "radiant_burst",
+    "leagueTitles": 0,
+    "cupTitles": 0,
+    "superCupTitles": 0
   },
   "ptah": {
     "id": "ptah",
@@ -434,11 +440,11 @@
     "subRole": "SpiritGuide",
     "abilities": [
       "comforting_heal",
-      "hex_mist",
-      "encouraging_words",
-      "radiant_pulse"
+      "smite",
+      "clarity_pulse",
+      "radiant_burst"
     ],
-    "ultimateId": "radiant_pulse",
+    "ultimateId": "radiant_burst",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
@@ -448,9 +454,9 @@
     "name": "Kevin",
     "subRole": "BruiserTank",
     "abilities": [
-      "shield_bash",
       "guard_slam",
-      "step_in_taunt",
+      "shield_bash",
+      "piercing_thrust",
       "line_cleave"
     ],
     "ultimateId": "line_cleave",
@@ -523,12 +529,12 @@
     "name": "Joey",
     "subRole": "ArcaneController",
     "abilities": [
-      "speed_sap",
       "hex_mist",
+      "arcane_bolt",
       "clarity_pulse",
-      "barrier_field"
+      "chaos_storm"
     ],
-    "ultimateId": "barrier_field",
+    "ultimateId": "chaos_storm",
     "leagueTitles": 0,
     "cupTitles": 0,
     "superCupTitles": 0
