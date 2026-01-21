@@ -324,7 +324,8 @@ function columnAllowedForProjectile(col, casterCol) {
 }
 
 function collectEnemyTargets(state, casterRef, ability) {
-  if (lowAlly && teamState.fighters[lowAlly.id]?.hp < teamState.fighters[lowAlly.id]?.maxHP * 0.7) {
+  const enemyTeamKey = getEnemyKey(casterRef);
+  const enemyTeam = enemyTeamKey === "teamA" ? state.teamA : state.teamB;
   const casterPos = getPositionOfFighter(state, casterRef.id);
   if (!casterPos) return [];
 
