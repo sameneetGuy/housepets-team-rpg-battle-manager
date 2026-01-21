@@ -17,9 +17,6 @@
       "lanes": "any"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [
         {
           "stat": "defense",
@@ -30,7 +27,10 @@
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "guard_slam",
@@ -51,14 +51,20 @@
       "lanes": "same_lane"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
-      "buffs": [{ "stat": "defense", "amount": 1, "duration": 1 }],
+      "buffs": [
+        {
+          "stat": "defense",
+          "amount": 1,
+          "duration": 1
+        }
+      ],
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d4",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "intercept_strike",
@@ -78,14 +84,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 4,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "line_cleave",
@@ -106,14 +112,14 @@
       "lanes": "any"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "damageDice": "2d4",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "shield_bash",
@@ -134,9 +140,6 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": [
         {
@@ -147,7 +150,10 @@
       ]
     },
     "cooldown": 1,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "shield_wall",
@@ -168,14 +174,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 1,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": "1d4"
   },
   {
     "id": "step_in_taunt",
@@ -196,9 +202,6 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": [
         {
@@ -209,7 +212,10 @@
       ]
     },
     "cooldown": 4,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d4",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "chaos_barrage",
@@ -230,15 +236,15 @@
       "lanes": "arc"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 0,
     "oncePerBattle": true,
-    "interruptible": true
+    "interruptible": true,
+    "damageDice": "2d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "dash_strike",
@@ -258,14 +264,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "execute",
@@ -285,14 +291,14 @@
       "lanes": "same_lane"
     },
     "effect": {
-      "damage": 2,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 3,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d8",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "flanking_strike",
@@ -312,9 +318,6 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": [
         {
@@ -325,7 +328,10 @@
       ]
     },
     "cooldown": 3,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "lane_shot",
@@ -346,14 +352,14 @@
       "lanes": "arc"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "piercing_thrust",
@@ -374,14 +380,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "quick_cut",
@@ -402,14 +408,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 1,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "1d4",
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "ricochet_shot",
@@ -429,54 +435,54 @@
       "lanes": "arc"
     },
     "effect": {
-      "damage": 1,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 3,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": "2d6",
+    "healDice": null,
+    "shieldDice": null
   },
   {
-  "id": "attack_buff",
-  "name": "Tactical Uplift",
-  "role": "Support",
-  "subRoleTags": [
-    "Tactician",
-    "Leader"
-  ],
-  "type": "support",
-  "category": "buff",
-  "target": "ally",
-  "range": {
-    "pattern": "single",
-    "delivery": "support",
-    "stepIn": false,
-    "diagonal": false,
-    "lanes": "same_or_adjacent"
-  },
-  "effect": {
-    "damage": 0,
-    "heal": 0,
-    "shield": 1,
-    "buffs": [
-      {
-        "stat": "defense",
-        "amount": 1,
-        "duration": 2
-      },
-      {
-        "stat": "speed",
-        "amount": 1,
-        "duration": 1
-      }
+    "id": "attack_buff",
+    "name": "Tactical Uplift",
+    "role": "Support",
+    "subRoleTags": [
+      "Tactician",
+      "Leader"
     ],
-    "debuffs": []
+    "type": "support",
+    "category": "buff",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {
+      "buffs": [
+        {
+          "stat": "defense",
+          "amount": 1,
+          "duration": 2
+        },
+        {
+          "stat": "speed",
+          "amount": 1,
+          "duration": 1
+        }
+      ],
+      "debuffs": []
+    },
+    "cooldown": 3,
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
-  "cooldown": 3,
-  "oncePerBattle": false
-},
   {
     "id": "barrier_field",
     "name": "Barrier Field",
@@ -489,22 +495,22 @@
     "category": "shield",
     "target": "ally",
     "range": {
-      "pattern": "front_row",
+      "pattern": "team",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
       "lanes": "any"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 1,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 0,
     "oncePerBattle": true,
-    "interruptible": true
+    "interruptible": true,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": "2d6"
   },
   {
     "id": "clarity_pulse",
@@ -525,9 +531,6 @@
       "lanes": "any"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [
         {
           "stat": "speed",
@@ -538,7 +541,10 @@
       "debuffs": []
     },
     "cooldown": 3,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "comforting_heal",
@@ -557,16 +563,13 @@
       "diagonal": false,
       "lanes": "same_or_adjacent"
     },
-    "effect": {
-      "damage": 0,
-      "heal": 1,
-      "shield": 0,
-      "buffs": [],
-      "debuffs": []
-    },
-    "cooldown": 3,
+    "effect": {},
+    "cooldown": 5,
     "oncePerBattle": false,
-    "interruptible": true
+    "interruptible": true,
+    "damageDice": null,
+    "healDice": "1d4",
+    "shieldDice": null
   },
   {
     "id": "encouraging_words",
@@ -587,9 +590,6 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [
         {
           "stat": "speed",
@@ -600,7 +600,10 @@
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "hex_mist",
@@ -621,9 +624,6 @@
       "lanes": "arc"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": [
         {
@@ -639,7 +639,10 @@
       ]
     },
     "cooldown": 3,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "hopeful_cheer",
@@ -660,9 +663,6 @@
       "lanes": "any"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [
         {
           "stat": "speed",
@@ -673,7 +673,10 @@
       "debuffs": []
     },
     "cooldown": 4,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "lane_swap",
@@ -693,14 +696,14 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
     "id": "protective_shield",
@@ -721,14 +724,15 @@
       "lanes": "same_or_adjacent"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 1,
       "buffs": [],
       "debuffs": []
     },
-    "cooldown": 2,
-    "oncePerBattle": false
+    "cooldown": 4,
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": "1d4",
+    "interruptible": true
   },
   {
     "id": "radiant_pulse",
@@ -738,24 +742,24 @@
       "Healer"
     ],
     "type": "support",
-    "category": "shield",
+    "category": "heal",
     "target": "ally",
     "range": {
-      "pattern": "single",
+      "pattern": "team",
       "delivery": "support",
       "stepIn": false,
       "diagonal": false,
       "lanes": "any"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 1,
       "buffs": [],
       "debuffs": []
     },
     "cooldown": 0,
-    "oncePerBattle": true
+    "oncePerBattle": true,
+    "damageDice": null,
+    "healDice": "2d4",
+    "shieldDice": null
   },
   {
     "id": "speed_sap",
@@ -776,9 +780,6 @@
       "lanes": "arc"
     },
     "effect": {
-      "damage": 0,
-      "heal": 0,
-      "shield": 0,
       "buffs": [],
       "debuffs": [
         {
@@ -789,44 +790,305 @@
       ]
     },
     "cooldown": 2,
-    "oncePerBattle": false
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": null,
+    "shieldDice": null
   },
   {
-  "id": "warm_heal",
-  "name": "Rallying Warmth",
-  "role": "Support",
-  "subRoleTags": ["Healer"],
-  "type": "support",
-  "category": "buff",
-  "target": "ally",
-  "range": {
-    "pattern": "single",
-    "delivery": "support",
-    "stepIn": false,
-    "diagonal": false,
-    "lanes": "same_or_adjacent"
+    "id": "warm_heal",
+    "name": "Warm Heal",
+    "role": "Support",
+    "subRoleTags": [
+      "Healer"
+    ],
+    "type": "support",
+    "category": "heal",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_or_adjacent"
+    },
+    "effect": {},
+    "cooldown": 5,
+    "oncePerBattle": false,
+    "damageDice": null,
+    "healDice": "1d4",
+    "shieldDice": null,
+    "interruptible": true
   },
-  "effect": {
-    "damage": 0,
-    "heal": 0,
-    "shield": 0,
-    "buffs": [
-      {
+  {
+    "id": "lay_on_hands",
+    "name": "Lay on Hands",
+    "role": "Support",
+    "subRoleTags": [
+      "Paladin"
+    ],
+    "type": "support",
+    "category": "heal",
+    "target": "ally",
+    "range": {
+      "pattern": "single",
+      "delivery": "support",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "adjacent"
+    },
+    "damageDice": null,
+    "healDice": "1d4",
+    "shieldDice": null,
+    "effect": {},
+    "cooldown": 5,
+    "oncePerBattle": false,
+    "interruptible": true
+  },
+  {
+    "id": "divine_cleave",
+    "name": "Divine Cleave",
+    "role": "Tank",
+    "subRoleTags": [
+      "Paladin"
+    ],
+    "type": "melee",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "front_row",
+      "delivery": "melee",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "front"
+    },
+    "damageDice": "2d4",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "postEffect": {
+      "allyShield": "1d4"
+    },
+    "cooldown": 0,
+    "oncePerBattle": true,
+    "interruptible": false
+  },
+  {
+    "id": "inspiring_strike",
+    "name": "Inspiring Strike",
+    "role": "DPS",
+    "subRoleTags": [
+      "Leader"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_lane"
+    },
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "postEffect": {
+      "allyBuff": {
         "stat": "attack",
         "amount": 1,
         "duration": 2
-      },
-      {
-        "stat": "defense",
+      }
+    },
+    "cooldown": 3,
+    "oncePerBattle": false
+  },
+  {
+    "id": "rallying_cry",
+    "name": "Rallying Cry",
+    "role": "Support",
+    "subRoleTags": [
+      "Leader"
+    ],
+    "type": "support",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "front_row",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "all"
+    },
+    "damageDice": "2d4",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "postEffect": {
+      "teamBuff": {
+        "stat": "attack",
         "amount": 1,
         "duration": 2
       }
-    ],
-    "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
   },
-  "cooldown": 3,
-  "oncePerBattle": false,
-  "cleanses": 1
-}
-
+  {
+    "id": "smite",
+    "name": "Smite",
+    "role": "DPS",
+    "subRoleTags": [
+      "SpiritGuide"
+    ],
+    "type": "melee",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "melee",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "same_lane"
+    },
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
+    "id": "radiant_burst",
+    "name": "Radiant Burst",
+    "role": "Support",
+    "subRoleTags": [
+      "SpiritGuide"
+    ],
+    "type": "support",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "random",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "all"
+    },
+    "damageDice": "2d4",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "postEffect": {
+      "allyHeal": "1d4"
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
+  },
+  {
+    "id": "arcane_bolt",
+    "name": "Arcane Bolt",
+    "role": "DPS",
+    "subRoleTags": [
+      "Mystic",
+      "ArcaneController"
+    ],
+    "type": "projectile",
+    "category": "attack",
+    "target": "enemy",
+    "range": {
+      "pattern": "single",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "column_restricted"
+    },
+    "damageDice": "1d6",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 2,
+    "oncePerBattle": false
+  },
+  {
+    "id": "chaos_storm",
+    "name": "Chaos Storm",
+    "role": "Support",
+    "subRoleTags": [
+      "Mystic",
+      "ArcaneController"
+    ],
+    "type": "projectile",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "random",
+      "delivery": "projectile",
+      "stepIn": false,
+      "diagonal": false,
+      "lanes": "all"
+    },
+    "damageDice": "2d4",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": [
+        {
+          "stat": "speed",
+          "amount": -1,
+          "duration": 2
+        }
+      ]
+    },
+    "cooldown": 0,
+    "oncePerBattle": true
+  },
+  {
+    "id": "devastating_charge",
+    "name": "Devastating Charge",
+    "role": "Tank",
+    "subRoleTags": [
+      "Vanguard"
+    ],
+    "type": "melee",
+    "category": "aoe",
+    "target": "enemy",
+    "range": {
+      "pattern": "front_row",
+      "delivery": "melee",
+      "stepIn": true,
+      "diagonal": false,
+      "lanes": "front"
+    },
+    "damageDice": "2d6",
+    "healDice": null,
+    "shieldDice": null,
+    "effect": {
+      "buffs": [],
+      "debuffs": []
+    },
+    "cooldown": 0,
+    "oncePerBattle": true,
+    "interruptible": false
+  }
 ]

@@ -2,6 +2,7 @@
 // New 2×3 esports battle engine built for the universal ability list.
 
 import { GAME } from "../core/state.js";
+import { roll } from "../core/dice.js";
 
 const POSITIONS = ["FL", "FC", "FR", "BL", "BC", "BR"];
 const BUFF_CAP = 3;
@@ -38,7 +39,7 @@ function createFighterInstance(base) {
     buffs: [],
     debuffs: [],
     shieldValue: 0,
-    shieldDuration: 0,
+    shieldDecay: 0,
     cooldowns: {},
     usedUltimate: false,
   };
@@ -108,6 +109,27 @@ function rollD20() {
   return Math.floor(Math.random() * 20) + 1;
 }
 
+function calculateDamage(ability, attacker, defender) {
+  const baseRoll = roll(ability.damageDice);
+  if (baseRoll === 0) return 0;
+
+  const atkMod = getEffectiveStat(attacker, "attack");
+  const defMod = getEffectiveStat(defender, "defense");
+  const statBonus = atkMod - defMod;
+
+  return Math.max(1, baseRoll + statBonus);
+}
+
+function calculateHealing(ability) {
+  if (!ability.healDice) return 0;
+  return roll(ability.healDice);
+}
+
+function calculateShield(ability) {
+  if (!ability.shieldDice) return 0;
+  return roll(ability.shieldDice);
+}
+
 // Contest attack vs defense to determine if a damaging ability hits.
 function attemptAttackHit(state, caster, target, ability) {
   const atk = getEffectiveStat(caster, "attack");
@@ -171,7 +193,7 @@ function tickEffects(teamState) {
 function applyShield(target, amount) {
   if (amount <= 0) return;
   target.shieldValue = Math.max(target.shieldValue, amount);
-  target.shieldDuration = 1; // lasts until the start of the target's next turn
+  target.shieldDecay = 1;
 }
 
 function applyHeal(source, target, amount, log) {
@@ -189,16 +211,25 @@ function dealDamage(state, source, targetRef, amount, log) {
   const target = targetTeam.fighters[targetRef.id];
   if (!isAlive(target)) return;
 
+  let damage = amount;
+
   if (target.shieldValue > 0) {
-    target.shieldValue = Math.max(0, target.shieldValue - amount);
-    target.shieldDuration = 0;
-    log.push(`${source.name} hits ${target.name}, but a shield blocks the damage.`);
-    state.flags.interrupted[targetRef.id] = true;
-    return;
+    const blocked = Math.min(target.shieldValue, damage);
+    target.shieldValue -= blocked;
+    damage -= blocked;
+
+    if (blocked > 0) {
+      log.push(`${source.name}'s attack hits ${target.name}'s shield (blocked ${blocked} damage).`);
+    }
+
+    if (damage === 0) {
+      state.flags.interrupted[targetRef.id] = true;
+      return;
+    }
   }
 
-  target.hp = Math.max(0, target.hp - amount);
-  log.push(`${source.name} hits ${target.name} for ${amount} damage.`);
+  target.hp = Math.max(0, target.hp - damage);
+  log.push(`${source.name} hits ${target.name} for ${damage} damage!`);
   state.flags.interrupted[targetRef.id] = true;
   if (target.hp === 0) {
     log.push(`${target.name} is KO'd!`);
@@ -206,11 +237,8 @@ function dealDamage(state, source, targetRef, amount, log) {
 }
 
 function tickShield(fighter) {
-  if (fighter.shieldDuration > 0) {
-    fighter.shieldDuration -= 1;
-    if (fighter.shieldDuration <= 0) {
-      fighter.shieldValue = 0;
-    }
+  if (fighter.shieldValue > 0) {
+    fighter.shieldValue = Math.max(0, fighter.shieldValue - (fighter.shieldDecay || 1));
   }
 }
 
@@ -366,6 +394,11 @@ function selectTargets(state, casterRef, ability, preferredTargetId = null) {
     return shuffle(candidates).slice(0, 2);
   }
 
+  if (pattern === "random") {
+    const pick = randomChoice(candidates);
+    return pick ? [pick] : [];
+  }
+
   if (pattern === "team") {
     return candidates;
   }
@@ -417,7 +450,7 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
 
     // --- Hit checks for enemy-targeting abilities ---
     if (isEnemyTarget) {
-      const hasDamage = !!effect.damage;
+      const hasDamage = !!ability.damageDice || !!effect.damage;
       const hasDebuffs = Array.isArray(effect.debuffs) && effect.debuffs.length > 0;
 
       if (hasDamage) {
@@ -435,15 +468,31 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
       }
     }
 
-    if (effect.damage) {
+    if (ability.damageDice) {
+      const damage = calculateDamage(ability, caster, target);
+      dealDamage(state, caster, targetRef, damage, state.log);
+    }
+
+    if (ability.healDice) {
+      const healAmount = calculateHealing(ability);
+      applyHeal(caster, target, healAmount, state.log);
+    }
+
+    if (ability.shieldDice) {
+      const shieldValue = calculateShield(ability);
+      applyShield(target, shieldValue);
+      state.log.push(`${caster.name} shields ${target.name} (${shieldValue} absorption).`);
+    }
+
+    if (effect.damage && !ability.damageDice) {
       dealDamage(state, caster, targetRef, effect.damage, state.log);
     }
 
-    if (effect.heal) {
+    if (effect.heal && !ability.healDice) {
       applyHeal(caster, target, effect.heal, state.log);
     }
 
-    if (effect.shield) {
+    if (effect.shield && !ability.shieldDice) {
       applyShield(target, effect.shield);
       state.log.push(`${caster.name} shields ${target.name}.`);
     }
@@ -456,6 +505,39 @@ function applyAbility(state, casterRef, ability, chosenTargetId = null) {
     if (effect.debuffs && effect.debuffs.length > 0 && ability.target !== "ally") {
       applyDebuffs(target, effect.debuffs);
       state.log.push(`${caster.name} weakens ${target.name}.`);
+    }
+  }
+
+  const postEffect = ability.postEffect;
+  if (postEffect) {
+    const teamKey = getTeamKey(casterRef);
+    const teamState = teamKey === "teamA" ? state.teamA : state.teamB;
+    const allies = Object.values(teamState.fighters).filter((f) => isAlive(f));
+
+    if (postEffect.allyShield && allies.length > 0) {
+      const ally = randomChoice(allies);
+      const shieldValue = roll(postEffect.allyShield);
+      applyShield(ally, shieldValue);
+      state.log.push(`${caster.name} shields ${ally.name} (${shieldValue} absorption).`);
+    }
+
+    if (postEffect.allyHeal && allies.length > 0) {
+      const lowest = allies.reduce((best, current) => (current.hp < best.hp ? current : best), allies[0]);
+      const healAmount = roll(postEffect.allyHeal);
+      applyHeal(caster, lowest, healAmount, state.log);
+    }
+
+    if (postEffect.allyBuff && allies.length > 0) {
+      const ally = randomChoice(allies);
+      applyBuffs(ally, [postEffect.allyBuff]);
+      state.log.push(`${caster.name} buffs ${ally.name}.`);
+    }
+
+    if (postEffect.teamBuff && allies.length > 0) {
+      for (const ally of allies) {
+        applyBuffs(ally, [postEffect.teamBuff]);
+      }
+      state.log.push(`${caster.name} rallies the team.`);
     }
   }
 
@@ -512,8 +594,10 @@ function chooseBestTarget(targets, teamState) {
 
 function chooseAction(state, casterRef) {
   const caster = getFighter(state, casterRef);
-  const isSupport = caster.role === "Support";
-  const isDps = caster.role === "DPS";
+  const subroleData = GAME.subroleMap?.[caster.subRole] || GAME.subroles?.[caster.subRole];
+  const roles = subroleData?.roles || caster.roles || [subroleData?.role || caster.role].filter(Boolean);
+  const isSupport = roles.includes("Support");
+  const isDps = roles.includes("DPS");
   const teamKey = getTeamKey(casterRef);
   const teamState = teamKey === "teamA" ? state.teamA : state.teamB;
   const enemyKey = getEnemyKey(casterRef);
@@ -528,7 +612,9 @@ function chooseAction(state, casterRef) {
     if (heal) {
       const targets = selectTargets(state, casterRef, heal);
       const lowAlly = chooseBestTarget(targets, teamState);
-      if (lowAlly) return { type: "ability", ability: heal, targetId: lowAlly.id };
+      if (lowAlly && teamState.fighters[lowAlly.id]?.hp < teamState.fighters[lowAlly.id]?.maxHP * 0.7) {
+        return { type: "ability", ability: heal, targetId: lowAlly.id };
+      }
     }
   }
 
@@ -536,14 +622,24 @@ function chooseAction(state, casterRef) {
   if (isDps) {
     for (const ability of readyAbilities) {
       const targets = selectTargets(state, casterRef, ability);
-      const killable = targets.find((t) => enemyState.fighters[t.id]?.hp === 1);
-      if (killable) return { type: "ability", ability, targetId: killable.id };
+      const killable = targets.find((t) => enemyState.fighters[t.id]?.hp <= 3);
+      if (killable) {
+        return { type: "ability", ability, targetId: killable.id };
+      }
     }
   }
 
-  // Support repositioning if exposed
+  // Tank repositioning if in back row
   const casterPos = getPositionOfFighter(state, casterRef.id);
-  if (isSupport && casterPos?.row === 0) {
+  if (roles.includes("Tank") && casterPos?.row === 1) {
+    const frontIdx = coordToIndex(0, casterPos.col);
+    if (teamState.grid[frontIdx] == null) {
+      return { type: "move", targetIndex: frontIdx };
+    }
+  }
+
+  // Support repositioning if exposed (no tank role)
+  if (isSupport && !roles.includes("Tank") && casterPos?.row === 0) {
     const backIdx = coordToIndex(1, casterPos.col);
     if (teamState.grid[backIdx] == null) {
       return { type: "move", targetIndex: backIdx };

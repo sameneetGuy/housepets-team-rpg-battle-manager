@@ -59,6 +59,7 @@ export async function loadFighters() {
 
   // Store subrole templates
   GAME.subroles = subrolesJson;
+  GAME.subroleMap = subrolesJson;
 
   // Stable order of fighters (by id)
   GAME.fighterOrder = Object.keys(fightersJson);
@@ -79,15 +80,25 @@ export async function loadFighters() {
     const subroleStats = GAME.subroles?.[f.subRole];
 
     if (subroleStats) {
-      f.role = subroleStats.role;
+      if (Array.isArray(subroleStats.roles)) {
+        f.roles = subroleStats.roles;
+        f.role = subroleStats.primaryRole || subroleStats.roles[0];
+      } else {
+        f.role = subroleStats.role;
+        f.roles = [f.role];
+      }
       f.attack = subroleStats.attack;
       f.defense = subroleStats.defense;
       f.speed = subroleStats.speed;
+      f.maxHP = typeof f.maxHP === "number" ? f.maxHP : subroleStats.hp;
     } else {
       // Fallback to existing fighter values when subrole is missing
       f.attack = typeof f.attack === "number" ? f.attack : 3;
       f.defense = typeof f.defense === "number" ? f.defense : 3;
       f.speed = typeof f.speed === "number" ? f.speed : 3;
+      f.maxHP = typeof f.maxHP === "number" ? f.maxHP : 3;
+      f.role = f.role || "DPS";
+      f.roles = f.roles || [f.role];
     }
 
     // Ensure title stats exist (for multi-season tracking)
@@ -97,7 +108,7 @@ export async function loadFighters() {
 
     // Ensure maxHP exists (should already be in fighters.json)
     if (typeof f.maxHP !== "number") {
-      f.maxHP = f.role === "Tank" ? 4 : 3;
+      f.maxHP = f.role === "Tank" ? 11 : 7;
     }
   }
 }
