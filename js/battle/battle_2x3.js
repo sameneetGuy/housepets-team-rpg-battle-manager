@@ -147,10 +147,14 @@ function attemptAttackHit(state, caster, target, ability) {
 
 // Contest speed vs speed to determine if a pure debuff lands.
 function attemptDebuffHit(state, caster, target, ability) {
-  const atkSpeed = getEffectiveStat(caster, "speed");
-  const defSpeed = getEffectiveStat(target, "speed");
-  const attackRoll = rollD20() + atkSpeed;
-  const defenseRoll = rollD20() + defSpeed;
+  const atkStat = caster.precision !== undefined
+    ? getEffectiveStat(caster, "precision")
+    : getEffectiveStat(caster, "speed");
+  const defStat = target.precision !== undefined
+    ? getEffectiveStat(target, "precision")
+    : getEffectiveStat(target, "speed");
+  const attackRoll = rollD20() + atkStat;
+  const defenseRoll = rollD20() + defStat;
 
   if (attackRoll >= defenseRoll) {
     return true;

@@ -71,6 +71,65 @@ This document freezes the core rules for the new 2×3 battle system before imple
 - Support: 5-7 HP (depending on subrole).
 - Hybrids: average of their two roles.
 
+## Stat System Design
+
+### Four Stats: Attack, Defense, Speed, Precision
+
+**Attack (A):**
+- Increases damage output.
+- Added to damage dice: Damage = DamageDice + (Attack - Defense).
+- Range: 1-6.
+
+**Defense (D):**
+- Reduces incoming damage.
+- Subtracted from attacker's bonus: Damage = DamageDice + (Attack - Defense).
+- Range: 1-6.
+
+**Speed (S):**
+- Determines turn order (higher = goes first).
+- Breaks ties randomly.
+- Range: 2-5.
+
+**Precision (P):**
+- Used for debuff accuracy contests.
+- Debuff hit check: D20 + Caster Precision vs D20 + Target Precision.
+- Does NOT affect healing (heals use dice only).
+- Range: 0-4 (0 = physical fighters, 4 = specialists).
+
+### Stat Point Budgets by Role
+
+**Tanks: 12 total points**
+- Most versatile role.
+- High survivability, moderate damage.
+- Example: Defender (1/6/2/3), BruiserTank (4/4/2/2).
+
+**DPS: 11 total points**
+- Specialist damage dealers.
+- High attack, low defense (glass cannons allowed).
+- Example: Berserker (6/1/4/0), Striker (5/2/4/0).
+
+**Support: 10 total points**
+- Fragile utility role.
+- Low combat stats, high precision.
+- Example: Healer (1/2/3/4), Debuffer (1/2/3/4).
+
+**Hybrids:**
+- Tank hybrids: 12 points (maintain tank durability).
+- DPS hybrids: 11 points (average of Support 10 + DPS 11).
+- Example: Paladin (2/5/2/3), Leader (4/2/3/2).
+
+### Design Philosophy
+
+Each subrole has a **clear identity** with meaningful strengths and weaknesses:
+
+- **Berserker** (6/1/4/0): Highest attack, paper defense, pure physical.
+- **Defender** (1/6/2/3): Lowest attack, highest defense, good resistance.
+- **Healer** (1/2/3/4): Minimal damage, fragile, maximum precision.
+- **Agile** (4/2/5/0): Speed demon, goes first, good attack.
+- **Debuffer** (1/2/3/4): No damage, fragile, lands every hex.
+
+Wide stat ranges (1-6) create meaningful differences between fighters. A Berserker (A:6) deals significantly more damage than a Defender (A:1), creating clear role distinction.
+
 ## Turn and Combat Flow
 - Turn order is determined by Speed among living fighters and advances through a queue per round.
 - On a fighter's turn they choose to move or use an ability.
