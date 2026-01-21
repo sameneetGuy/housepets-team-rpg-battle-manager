@@ -1,5 +1,6 @@
 // js/core/loader.js
 
+
 import { GAME } from "./state.js";
 
 /**
@@ -97,7 +98,7 @@ export async function loadFighters() {
       f.attack = typeof f.attack === "number" ? f.attack : 3;
       f.defense = typeof f.defense === "number" ? f.defense : 3;
       f.speed = typeof f.speed === "number" ? f.speed : 3;
-      f.precision = typeof f.precision === "number" ? f.precision : 0;
+      f.precision = typeof f.precision === "number" ? f.precision : 3;
       f.maxHP = typeof f.maxHP === "number" ? f.maxHP : 3;
       f.role = f.role || "DPS";
       f.roles = f.roles || [f.role];
